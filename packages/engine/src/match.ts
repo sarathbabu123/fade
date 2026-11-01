@@ -21,6 +21,43 @@ export const MATCH_TIMING = {
   moveGraceMs: 250,
 } as const;
 
+/**
+ * Round 1 starter is decided by a tap race: "GET READY… GO!", fastest tap starts.
+ * Reaction times are measured on each device from when GO was shown.
+ */
+export const START_RACE = {
+  /** Taps faster than this after GO count as anticipation, i.e. a false start. */
+  minReactionMs: 100,
+  /** Reactions this close together are a tie, settled by the coin. */
+  tieMs: 10,
+  /** No tap within this long after GO counts as no tap. */
+  windowMs: 5000,
+} as const;
+
+export type RaceTap =
+  | { kind: 'tap'; reactionMs: number }
+  /** Tapped before GO. */
+  | { kind: 'falseStart' }
+  /** Didn't tap within START_RACE.windowMs. */
+  | { kind: 'none' };
+
+/**
+ * Who starts round 1. `coin` (chosen at random by the caller) settles ties,
+ * double false starts and double no-shows.
+ */
+export function resolveStartRace(x: RaceTap, o: RaceTap, coin: Player): Player {
+  const rank = (t: RaceTap): number => {
+    if (t.kind === 'falseStart') return Infinity;
+    if (t.kind === 'none') return START_RACE.windowMs;
+    if (t.reactionMs < START_RACE.minReactionMs) return Infinity;
+    return Math.min(t.reactionMs, START_RACE.windowMs);
+  };
+  const rx = rank(x);
+  const ro = rank(o);
+  if (rx === ro || Math.abs(rx - ro) <= START_RACE.tieMs) return coin;
+  return rx < ro ? 'X' : 'O';
+}
+
 export interface MatchConfig {
   round: RoundConfig;
   /** Best of this many rounds (odd). First to ceil(bestOf / 2) wins. */
@@ -50,7 +87,7 @@ export interface RoundRecord {
 /** Plain JSON (stored in matches.state). */
 export interface MatchState {
   config: MatchConfig;
-  /** Who started round 1 (chosen at random by the caller). */
+  /** Who started round 1 (winner of the start race). */
   firstStarter: Player;
   roundNo: number;
   score: Record<Player, number>;
@@ -72,7 +109,7 @@ export function roundStarter(firstStarter: Player, roundNo: number): Player {
   return roundNo % 2 === 1 ? firstStarter : other(firstStarter);
 }
 
-/** `firstStarter` must be chosen at random by the caller; the engine stays deterministic. */
+/** `firstStarter` comes from resolveStartRace (the caller supplies the coin, so the engine stays deterministic). */
 export function createMatch(config: MatchConfig, firstStarter: Player): MatchState {
   validateConfig(config.round);
   if (!Number.isInteger(config.bestOf) || config.bestOf < 1 || config.bestOf % 2 === 0) {

@@ -10,6 +10,7 @@ import {
   matchMove,
   matchTimeout,
   resign,
+  resolveStartRace,
   roundStarter,
   serialize,
   startNextRound,
@@ -123,6 +124,40 @@ describe('match rules', () => {
     expect(m.status).toBe('roundOver');
     expect(() => matchMove(m, 4)).toThrow(EngineError);
     expect(() => matchTimeout(m)).toThrow(EngineError);
+  });
+});
+
+describe('start race (round 1 starter)', () => {
+  const tap = (reactionMs: number) => ({ kind: 'tap' as const, reactionMs });
+  const falseStart = { kind: 'falseStart' as const };
+  const none = { kind: 'none' as const };
+
+  it('the faster reaction starts', () => {
+    expect(resolveStartRace(tap(240), tap(310), 'O')).toBe('X');
+    expect(resolveStartRace(tap(400), tap(255), 'X')).toBe('O');
+  });
+
+  it('reactions within 10 ms are a tie settled by the coin', () => {
+    expect(resolveStartRace(tap(250), tap(260), 'O')).toBe('O');
+    expect(resolveStartRace(tap(250), tap(250), 'X')).toBe('X');
+    expect(resolveStartRace(tap(250), tap(261), 'O')).toBe('X');
+  });
+
+  it('a false start hands the first move to the opponent', () => {
+    expect(resolveStartRace(falseStart, tap(900), 'X')).toBe('O');
+    expect(resolveStartRace(tap(900), falseStart, 'O')).toBe('X');
+    expect(resolveStartRace(falseStart, none, 'X')).toBe('O');
+  });
+
+  it('a reaction under 100 ms counts as a false start', () => {
+    expect(resolveStartRace(tap(60), tap(450), 'X')).toBe('O');
+    expect(resolveStartRace(tap(100), tap(450), 'O')).toBe('X');
+  });
+
+  it('tapping beats not tapping; double false starts or no-shows go to the coin', () => {
+    expect(resolveStartRace(none, tap(1200), 'X')).toBe('O');
+    expect(resolveStartRace(none, none, 'O')).toBe('O');
+    expect(resolveStartRace(falseStart, falseStart, 'X')).toBe('X');
   });
 });
 
