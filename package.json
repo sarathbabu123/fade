@@ -1,0 +1,23 @@
+{
+  "name": "fade",
+  "private": true,
+  "workspaces": [
+    "packages/*",
+    "tools/*"
+  ],
+  "scripts": {
+    "test": "jest",
+    "typecheck": "tsc -p packages/engine && tsc -p tools/solver",
+    "solve": "node --experimental-strip-types --disable-warning=ExperimentalWarning tools/solver/src/cli.ts"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.29.7",
+    "@babel/preset-env": "^7.29.7",
+    "@babel/preset-typescript": "^7.29.7",
+    "@jest/globals": "^30.5.2",
+    "@types/node": "^26.6.6",
+    "babel-jest": "^30.5.2",
+    "jest": "^30.5.2",
+    "typescript": "~6.0.3"
+  }
+}

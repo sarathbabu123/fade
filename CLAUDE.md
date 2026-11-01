@@ -50,6 +50,9 @@ Use the latest stable versions and check current docs before using an API. Do no
 
 ## Commands (fill in as they're created)
 - `npm test` — all unit tests
+- `npm run typecheck` — tsc for engine (no Node types allowed) and solver
+- `npm run solve -- --budget-sec=300` — re-solve 3×3, rewrite `app/assets/bot/table-3x3.json` and `tools/solver/out/results.json` (4×4 runs are time-boxed by the budget)
+- Deno is not installed globally; `npx -y deno` hangs. Run the cached binary directly: `"$LOCALAPPDATA/npm-cache/_npx/42b366dd278b0c9f/node_modules/@deno/win32-x64/deno.exe" check --no-config <file>`
 - `npm run sync-engine` — copy engine + rating into Edge Functions
 - `npx expo start` — run the app in Expo Go
 - `eas build -p android --profile preview --non-interactive` — build the APK

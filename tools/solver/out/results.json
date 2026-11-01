@@ -1,0 +1,462 @@
+{
+  "generatedAt": "2026-11-01T18:39:28.195Z",
+  "budgetSec": 300,
+  "3x3": {
+    "withTimeouts": {
+      "reachable": 141843,
+      "reachableCounters0": 86338,
+      "passes": 19,
+      "start": {
+        "result": "win",
+        "plies": 13
+      },
+      "counts": {
+        "win": 100332,
+        "loss": 25388,
+        "draw": 16123
+      },
+      "winInMoves": {
+        "1": 50736,
+        "2": 16464,
+        "3": 13592,
+        "4": 12660,
+        "5": 3818,
+        "6": 2192,
+        "7": 254,
+        "8": 304,
+        "9": 312
+      },
+      "winInMovesCounters0": {
+        "1": 30240,
+        "2": 12672,
+        "3": 7816,
+        "4": 6252,
+        "5": 1900,
+        "6": 1096,
+        "7": 201,
+        "8": 200,
+        "9": 144
+      },
+      "avgBranching": 4.993189653349125,
+      "randomActionMistakeRate": 0.6700058405288051,
+      "opening": [
+        {
+          "cell": 0,
+          "result": "draw",
+          "plies": 0
+        },
+        {
+          "cell": 1,
+          "result": "win",
+          "plies": 13
+        },
+        {
+          "cell": 2,
+          "result": "draw",
+          "plies": 0
+        },
+        {
+          "cell": 3,
+          "result": "win",
+          "plies": 13
+        },
+        {
+          "cell": 4,
+          "result": "draw",
+          "plies": 0
+        },
+        {
+          "cell": 5,
+          "result": "win",
+          "plies": 13
+        },
+        {
+          "cell": 6,
+          "result": "draw",
+          "plies": 0
+        },
+        {
+          "cell": 7,
+          "result": "win",
+          "plies": 13
+        },
+        {
+          "cell": 8,
+          "result": "draw",
+          "plies": 0
+        },
+        {
+          "cell": null,
+          "result": "loss",
+          "plies": 14
+        }
+      ],
+      "playouts": {
+        "games": 20000,
+        "avgPlies": 13.3338,
+        "firstPlayerWinRate": 0.5243,
+        "cappedRate": 0.0015,
+        "randomMoveMistakeRate": 0.6213962795523604
+      },
+      "perfectLine": [
+        {
+          "ply": 1,
+          "winning": 4,
+          "legal": 10
+        },
+        {
+          "ply": 3,
+          "winning": 1,
+          "legal": 8
+        },
+        {
+          "ply": 5,
+          "winning": 1,
+          "legal": 6
+        },
+        {
+          "ply": 7,
+          "winning": 1,
+          "legal": 4
+        },
+        {
+          "ply": 9,
+          "winning": 1,
+          "legal": 4
+        },
+        {
+          "ply": 11,
+          "winning": 1,
+          "legal": 4
+        },
+        {
+          "ply": 13,
+          "winning": 1,
+          "legal": 4
+        }
+      ]
+    },
+    "withoutTimeouts": {
+      "reachable": 66682,
+      "reachableCounters0": 66682,
+      "passes": 18,
+      "start": {
+        "result": "win",
+        "plies": 13
+      },
+      "counts": {
+        "win": 45709,
+        "loss": 13388,
+        "draw": 7585
+      },
+      "winInMoves": {
+        "1": 22752,
+        "2": 8512,
+        "3": 7840,
+        "4": 3608,
+        "5": 1432,
+        "6": 908,
+        "7": 305,
+        "8": 344,
+        "9": 8
+      },
+      "winInMovesCounters0": {
+        "1": 22752,
+        "2": 8512,
+        "3": 7840,
+        "4": 3608,
+        "5": 1432,
+        "6": 908,
+        "7": 305,
+        "8": 344,
+        "9": 8
+      },
+      "avgBranching": 3.323610569568999,
+      "randomActionMistakeRate": 0.5683767373678053,
+      "opening": [
+        {
+          "cell": 0,
+          "result": "draw",
+          "plies": 0
+        },
+        {
+          "cell": 1,
+          "result": "win",
+          "plies": 13
+        },
+        {
+          "cell": 2,
+          "result": "draw",
+          "plies": 0
+        },
+        {
+          "cell": 3,
+          "result": "win",
+          "plies": 13
+        },
+        {
+          "cell": 4,
+          "result": "draw",
+          "plies": 0
+        },
+        {
+          "cell": 5,
+          "result": "win",
+          "plies": 13
+        },
+        {
+          "cell": 6,
+          "result": "draw",
+          "plies": 0
+        },
+        {
+          "cell": 7,
+          "result": "win",
+          "plies": 13
+        },
+        {
+          "cell": 8,
+          "result": "draw",
+          "plies": 0
+        }
+      ],
+      "playouts": {
+        "games": 20000,
+        "avgPlies": 13.3338,
+        "firstPlayerWinRate": 0.5243,
+        "cappedRate": 0.0015,
+        "randomMoveMistakeRate": 0.602691105825288
+      },
+      "perfectLine": [
+        {
+          "ply": 1,
+          "winning": 4,
+          "legal": 9
+        },
+        {
+          "ply": 3,
+          "winning": 1,
+          "legal": 7
+        },
+        {
+          "ply": 5,
+          "winning": 1,
+          "legal": 5
+        },
+        {
+          "ply": 7,
+          "winning": 1,
+          "legal": 3
+        },
+        {
+          "ply": 9,
+          "winning": 1,
+          "legal": 3
+        },
+        {
+          "ply": 11,
+          "winning": 1,
+          "legal": 3
+        },
+        {
+          "ply": 13,
+          "winning": 1,
+          "legal": 3
+        }
+      ]
+    },
+    "timeoutImpact": {
+      "compared": 66682,
+      "differ": 3420,
+      "examples": [
+        "draw → win",
+        "draw → win",
+        "draw → win"
+      ]
+    },
+    "tacticalCalibration": {
+      "games": 5000,
+      "avgPlies": 13.3112,
+      "avgBranching": 5.5698058777570765,
+      "firstPlayerWinRate": 0.5328,
+      "secondPlayerWinRate": 0.4656,
+      "tacticalBlunderRate": 0.4018639994804183
+    },
+    "table": {
+      "path": "app/assets/bot/table-3x3.json",
+      "slots": 918387,
+      "rawBytes": 918387,
+      "rleBytes": 445096,
+      "jsonBytes": 593552
+    }
+  },
+  "4x4-K4-L3": {
+    "positionSpaceUpperBound": 5884741017,
+    "markArrangements": 653860113,
+    "search": {
+      "budgetSec": 300,
+      "provenFirstWinPlies": 5,
+      "provenSecondWinPlies": null,
+      "firstWin": [
+        {
+          "depth": 1,
+          "result": false,
+          "ms": 0
+        },
+        {
+          "depth": 3,
+          "result": false,
+          "ms": 0
+        },
+        {
+          "depth": 5,
+          "result": true,
+          "ms": 1
+        }
+      ],
+      "secondWin": [
+        {
+          "depth": 2,
+          "result": false,
+          "ms": 0
+        },
+        {
+          "depth": 4,
+          "result": false,
+          "ms": 1
+        }
+      ],
+      "nodes": 899
+    },
+    "playouts": {
+      "games": 3000,
+      "avgPlies": 12.942333333333334,
+      "avgBranching": 11.7422154686172,
+      "firstPlayerWinRate": 0.5316666666666666,
+      "secondPlayerWinRate": 0.468,
+      "tacticalBlunderRate": 0.6469646102196076
+    }
+  },
+  "4x4-K4-L4": {
+    "positionSpaceUpperBound": 5884741017,
+    "markArrangements": 653860113,
+    "search": {
+      "budgetSec": 300,
+      "provenFirstWinPlies": null,
+      "provenSecondWinPlies": null,
+      "firstWin": [
+        {
+          "depth": 1,
+          "result": false,
+          "ms": 0
+        },
+        {
+          "depth": 3,
+          "result": false,
+          "ms": 0
+        },
+        {
+          "depth": 5,
+          "result": false,
+          "ms": 1
+        },
+        {
+          "depth": 7,
+          "result": false,
+          "ms": 9
+        },
+        {
+          "depth": 9,
+          "result": false,
+          "ms": 81
+        },
+        {
+          "depth": 11,
+          "result": false,
+          "ms": 707
+        },
+        {
+          "depth": 13,
+          "result": false,
+          "ms": 2564
+        },
+        {
+          "depth": 15,
+          "result": false,
+          "ms": 9985
+        },
+        {
+          "depth": 17,
+          "result": false,
+          "ms": 21810
+        },
+        {
+          "depth": 19,
+          "result": false,
+          "ms": 54593
+        }
+      ],
+      "secondWin": [
+        {
+          "depth": 2,
+          "result": false,
+          "ms": 0
+        },
+        {
+          "depth": 4,
+          "result": false,
+          "ms": 0
+        },
+        {
+          "depth": 6,
+          "result": false,
+          "ms": 0
+        },
+        {
+          "depth": 8,
+          "result": false,
+          "ms": 5
+        },
+        {
+          "depth": 10,
+          "result": false,
+          "ms": 41
+        },
+        {
+          "depth": 12,
+          "result": false,
+          "ms": 307
+        },
+        {
+          "depth": 14,
+          "result": false,
+          "ms": 1487
+        },
+        {
+          "depth": 16,
+          "result": false,
+          "ms": 4173
+        },
+        {
+          "depth": 18,
+          "result": false,
+          "ms": 11297
+        },
+        {
+          "depth": 20,
+          "result": false,
+          "ms": 66410
+        }
+      ],
+      "nodes": 56950784
+    },
+    "playouts": {
+      "games": 3000,
+      "avgPlies": 52.53633333333333,
+      "avgBranching": 9.685176607934826,
+      "firstPlayerWinRate": 0.13233333333333333,
+      "secondPlayerWinRate": 0.13566666666666666,
+      "tacticalBlunderRate": 0.10931852805629745
+    }
+  }
+}

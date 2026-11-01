@@ -16,11 +16,15 @@ The first APK you can install arrives at the end of **Phase 2** (offline: bot + 
 - Supabase: develop against the remote project (no Docker); deploy functions with `--use-api`. Project is in Frankfurt (kept by choice).
 - Dev testing in Expo Go; final APK from EAS `preview`.
 - APK is hosted in a permanent place (Supabase Storage public bucket), not only the EAS link.
+- **Early clinch** (2026-11-02): a match ends as soon as the trailing player can no longer draw level (e.g. 2–0 after 4 rounds with 2 draws). Otherwise first to 3, or 5 rounds.
+- **"Next to fade" pulse** (2026-11-02): only on a player's oldest mark when they hold K marks (it fades on their next placement). Departs from PRD §2.2 "always". A last-second timeout warning on the oldest mark is fine. Engine: `nextToFade()` (K marks) and `oldestMark()` (what a timeout fades).
+- Engine details (picked, not debated): timeouts count as plies for the 30/60 thresholds; a win on ply 60 beats the cap; a 0-mark timeout still counts toward 3 consecutive; placing resets only your own counter; counters reset each round; the round-1 starter is passed in (the engine never calls `Math.random`).
+- Import style (verified 2026-11-02 in Jest/Babel, Node strip-types, Deno 2.9 and tsc 6): relative imports with explicit `.ts`, erasable TS only (no enums/namespaces). Metro still to verify in Phase 1.
 
 ## Road to the first APK (do in this order)
 Each step uses the matching phase below, trimmed to the v1 scope. ⏸ marks a checkpoint: stop, show Sarath, and wait.
 
-1. [ ] **Phase 0: engine + solver.**
+1. [x] **Phase 0: engine + solver.** Done 2026-11-02; see `tools/solver/REPORT.md`. Board-size decision pending with Sarath.
    - Engine covers both round rules and match rules.
    - Timeout is a legal action in the solver, with per-player consecutive-timeout counters in the state.
    - The solver ignores the 30/60-move counters and treats unresolved cycles as draws; say so in the report.
