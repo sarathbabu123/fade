@@ -3,6 +3,7 @@ export * from './lines.ts';
 export * from './round.ts';
 export * from './match.ts';
 export * from './table.ts';
+export * from './bot.ts';
 
 import type { MatchState } from './match.ts';
 
