@@ -23,7 +23,13 @@ The first APK you can install arrives at the end of **Phase 2** (offline: bot + 
 - **Round starters keep plain alternation** (2026-11-02), round 5 included. Revisit with real match data (options: round-4 loser starts, or a fresh coin flip).
 - **Start race** (2026-11-02, Sarath's idea): the round-1 starter is decided by a "GET READY… GO!" tap race, not a coin flip; rounds 2–5 alternate. A tap before GO, or under 100 ms after it, is a false start and hands the first move to the opponent. Reactions within 10 ms are a tie, settled by a coin flip. Used in every mode: bot (human-like reaction), pass & play (split screen) and online. Engine: `resolveStartRace`.
 - **Online start race uses reaction times measured on each phone** (2026-11-02): the server schedules GO at a server time, each phone measures its reaction from when GO appeared, and the server rejects implausible values. Fair across networks; cheatable by a hacked app, which is acceptable for friends-only v1.
-- Import style (verified 2026-11-02 in Jest/Babel, Node strip-types, Deno 2.9 and tsc 6): relative imports with explicit `.ts`, erasable TS only (no enums/namespaces). Metro still to verify in Phase 1.
+- **Navigation** (2026-11-02): 3 bottom tabs, Play · Friends · Profile. Settings sits behind a gear on Profile.
+- **Avatars** (2026-11-02): our own neon line-art SVG glyphs (~12) × 8 Neon Ink colours, not emoji. Emoji stay only for reactions.
+- **Review screenshots** (2026-11-02): from Sarath's phone over USB debugging (adb screencap from Expo Go), which also lets us check performance on real hardware.
+- **One APK at the end** (2026-11-02): no early offline test APK; ratings stay in v1. Estimate given: about 13–19 h of build time across sessions, plus review.
+- **Expectations** (2026-11-02): Sarath asked whether a shareable APK could be ready in 20 minutes. Explained it can't; Sarath chose to keep the full plan over a fast offline APK or a no-frills online build.
+- Glass cards use translucent fill, hairline edge and highlight, not real-time blur: blurring the animated aurora every frame is too costly on mid-range Android. Revisit on device.
+- Import style (verified 2026-11-02 in Jest/Babel, Node strip-types, Deno 2.9 and tsc 6): relative imports with explicit `.ts`, erasable TS only (no enums/namespaces). Metro verified 2026-11-02 (the Android export bundles `@fade/engine`).
 
 ## Road to the first APK (do in this order)
 Each step uses the matching phase below, trimmed to the v1 scope. ⏸ marks a checkpoint: stop, show Sarath, and wait.

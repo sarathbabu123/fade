@@ -1,0 +1,36 @@
+{
+  "expo": {
+    "name": "FADE",
+    "slug": "fade",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "scheme": "fade",
+    "userInterfaceStyle": "dark",
+    "backgroundColor": "#0B0D17",
+    "android": {
+      "package": "com.sarath.fade",
+      "adaptiveIcon": {
+        "backgroundColor": "#0B0D17"
+      },
+      "predictiveBackGestureEnabled": false,
+      "edgeToEdgeEnabled": true
+    },
+    "web": {
+      "output": "single"
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#0B0D17"
+        }
+      ],
+      "expo-audio"
+    ],
+    "experiments": {
+      "typedRoutes": true,
+      "reactCompiler": true
+    }
+  }
+}
