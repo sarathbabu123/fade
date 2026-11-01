@@ -29,6 +29,7 @@ The first APK you can install arrives at the end of **Phase 2** (offline: bot + 
 - **One APK at the end** (2026-11-02): no early offline test APK; ratings stay in v1. Estimate given: about 13–19 h of build time across sessions, plus review.
 - **Expectations** (2026-11-02): Sarath asked whether a shareable APK could be ready in 20 minutes. Explained it can't; Sarath chose to keep the full plan over a fast offline APK or a no-frills online build.
 - Glass cards use translucent fill, hairline edge and highlight, not real-time blur: blurring the animated aurora every frame is too costly on mid-range Android. Revisit on device.
+- **Overnight build** (2026-11-02, Sarath asleep): Claude decides remaining calls itself (recommended option), skips review checkpoints, and logs each as "decided overnight". Authorised: Supabase migrations/functions, EAS init + cloud builds, a public Storage bucket for the APK, a locally generated Android keystore (gitignored), and Chrome for cloud dashboards if the CLIs can't do something. No phone overnight, so use an emulator. If time runs short, **cut ratings first**. PC sleep disabled on AC (`powercfg /change standby-timeout-ac 0`; Sarath restores with `powercfg /change standby-timeout-ac 30`).
 - Import style (verified 2026-11-02 in Jest/Babel, Node strip-types, Deno 2.9 and tsc 6): relative imports with explicit `.ts`, erasable TS only (no enums/namespaces). Metro verified 2026-11-02 (the Android export bundles `@fade/engine`).
 
 ## Road to the first APK (do in this order)
