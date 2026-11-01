@@ -1,0 +1,10 @@
+This folder is for building a app/game in apk format. 
+
+I have used supabase in my prtfolio you can borrow some stuff you need from there.
+
+here is the location of the portfolio - Re: Data scientist in Bengaluru: room on Myelin Foundry's ML team?
+feel free to open the env or any files. Nothing;s confidential.
+
+The plan I came up with claud eI ham attaching in this folder. We gotta build this., I want you to build this and give me a apk build which I will share with my friend. Make your own assets sfor the game . Prepare svgs or ask me to generate images.
+
+I have pasted the PRD and other documents the claude gave me. Help me quickly build this app in apk. atleast the first version. Debate with me and finalise if you have any conflict in making decisions. Ask me plenty of questions htrough out and save trhis in the state so in future sessions also it asks and debate with me.
