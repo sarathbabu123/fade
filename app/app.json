@@ -12,8 +12,7 @@
       "adaptiveIcon": {
         "backgroundColor": "#0B0D17"
       },
-      "predictiveBackGestureEnabled": false,
-      "edgeToEdgeEnabled": true
+      "predictiveBackGestureEnabled": false
     },
     "web": {
       "output": "single"
