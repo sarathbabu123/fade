@@ -1,9 +1,9 @@
 /**
- * npm run solve [-- --budget-sec=300]
+ * npm run solve [-- --budget-sec=300] [--skip-4x4]
  * Solves 3×3 exactly, writes app/assets/bot/table-3x3.json, runs time-boxed
  * proof searches + random playouts on 4×4, and writes tools/solver/out/results.json.
  */
-import { mkdirSync, writeFileSync } from 'node:fs';
+import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { bytesToBase64, pairCount, rleEncode, TABLE_VERSION, tableSize } from '@fade/engine';
@@ -15,6 +15,7 @@ import type { Solved } from './retrograde.ts';
 import { Budget, makeSearcher } from './search.ts';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '../../..');
+const skip4x4 = process.argv.includes('--skip-4x4');
 const budgetSec = Number(process.argv.find((a) => a.startsWith('--budget-sec='))?.split('=')[1] ?? 300);
 const log = (...a: unknown[]) => console.log(new Date().toISOString().slice(11, 19), ...a);
 
@@ -152,22 +153,23 @@ function narrowness(sol: Solved) {
 function timeoutImpact(withT: Solved, without: Solved) {
   let compared = 0;
   let differ = 0;
-  const examples: string[] = [];
+  /** changes['draw→win'] = positions that are a draw without timeouts and a win with them. */
+  const changes: Record<string, number> = {};
   const t = withT.shape.t;
   for (let id = 0; id < without.ids.length; id++) {
-    // without.ids uses t=1: index == pair index. with-timeouts index = pair*t*t (counters 0).
-    const idxWith = without.ids[id]! * t * t;
-    const wid = withT.idOf[idxWith];
+    // without.ids uses t=1, so its index is the pair index; with timeouts, counters 0 = pair * t * t.
+    const wid = withT.idOf[without.ids[id]! * t * t];
     if (wid === undefined || wid < 0) continue;
     compared++;
     const a = without.kind[id]!;
     const b = withT.kind[wid]!;
     if (a !== b) {
       differ++;
-      if (examples.length < 3) examples.push(`${kindName(a)} → ${kindName(b)}`);
+      const key = `${kindName(a)}→${kindName(b)}`;
+      changes[key] = (changes[key] ?? 0) + 1;
     }
   }
-  return { compared, differ, examples };
+  return { compared, differ, changes };
 }
 
 function writeTable(sol: Solved) {
@@ -294,7 +296,14 @@ results['3x3'] = {
 };
 log('3x3 done', JSON.stringify((results['3x3'] as { table: unknown }).table));
 
-for (const l of [3, 4]) {
+const outPath = join(root, 'tools/solver/out/results.json');
+if (skip4x4) {
+  // Keep the previous (slow) 4×4 results.
+  const prev = JSON.parse(readFileSync(outPath, 'utf8')) as Record<string, unknown>;
+  for (const k of Object.keys(prev)) if (k.startsWith('4x4')) results[k] = prev[k];
+  results['budgetSec'] = prev['budgetSec'];
+}
+for (const l of skip4x4 ? [] : [3, 4]) {
   const rules: Rules = { n: 4, k: 4, l, t: 3, timeouts: true };
   const key = `4x4-K4-L${l}`;
   log(`${key}: proof search (budget ${budgetSec}s)…`);
@@ -310,7 +319,6 @@ for (const l of [3, 4]) {
   log(key, JSON.stringify(results[key]));
 }
 
-const outPath = join(root, 'tools/solver/out/results.json');
 mkdirSync(dirname(outPath), { recursive: true });
 writeFileSync(outPath, JSON.stringify(results, null, 2));
 log('wrote', outPath);

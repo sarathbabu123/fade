@@ -172,6 +172,15 @@ describe('resign, forfeit, abort', () => {
     const a = abortMatch(createMatch(CONFIG, 'X'));
     expect(a).toMatchObject({ status: 'aborted', winner: null, reason: 'aborted' });
     expect(canAbort(startNextRound(playRounds(['X'])), 'O')).toBe(false);
+    expect(canAbort(a, 'X')).toBe(false);
+    expect(() => abortMatch(a)).toThrow(EngineError);
+    expect(() => resign(a, 'X')).toThrow(EngineError);
+  });
+
+  it('rejects an even or non-integer best-of', () => {
+    expect(() => createMatch({ ...CONFIG, bestOf: 4 }, 'X')).toThrow(EngineError);
+    expect(() => createMatch({ ...CONFIG, bestOf: 0 }, 'X')).toThrow(EngineError);
+    expect(createMatch({ ...CONFIG, bestOf: 3 }, 'X').status).toBe('playing');
   });
 });
 

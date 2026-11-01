@@ -12,6 +12,7 @@ import {
   nextToFade,
   oldestMark,
   validateConfig,
+  winner,
   winningLines,
 } from '../src/index.ts';
 import type { RoundState } from '../src/index.ts';
@@ -45,6 +46,9 @@ describe('board and lines', () => {
     expect(() => validateConfig({ ...DEFAULT_ROUND_CONFIG, l: 4 })).toThrow(EngineError);
     expect(() => validateConfig({ ...DEFAULT_ROUND_CONFIG, k: 5 })).toThrow(EngineError);
     expect(() => validateConfig({ ...DEFAULT_ROUND_CONFIG, n: 4, k: 4, l: 4 })).not.toThrow();
+    expect(() => validateConfig({ ...DEFAULT_ROUND_CONFIG, n: 2.5 })).toThrow(EngineError);
+    expect(() => validateConfig({ ...DEFAULT_ROUND_CONFIG, maxPlies: 0 })).toThrow(EngineError);
+    expect(() => validateConfig({ ...DEFAULT_ROUND_CONFIG, n: 1, k: 1, l: 1 })).toThrow(EngineError);
   });
 });
 
@@ -112,9 +116,10 @@ describe('a move', () => {
   it('wins with 3 in a row before any fade', () => {
     const s = play([0, 3, 1, 4, 2]);
     expect(s.status).toBe('won');
-    expect(s.winner).toBe('X');
+    expect(winner(s)).toBe('X');
     expect(s.line).toEqual([0, 1, 2]);
     expect(legalMoves(s)).toEqual([]);
+    expect(() => applyTimeout(s)).toThrow(EngineError);
     expect(() => applyMove(s, 8)).toThrow(EngineError);
   });
 

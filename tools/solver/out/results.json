@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-11-01T18:39:28.195Z",
+  "generatedAt": "2026-11-01T18:48:44.697Z",
   "budgetSec": 300,
   "3x3": {
     "withTimeouts": {
@@ -268,11 +268,14 @@
     "timeoutImpact": {
       "compared": 66682,
       "differ": 3420,
-      "examples": [
-        "draw → win",
-        "draw → win",
-        "draw → win"
-      ]
+      "changes": {
+        "draw→win": 1060,
+        "win→draw": 528,
+        "draw→loss": 328,
+        "win→loss": 392,
+        "loss→draw": 272,
+        "loss→win": 840
+      }
     },
     "tacticalCalibration": {
       "games": 5000,

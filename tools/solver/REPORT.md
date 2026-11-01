@@ -52,7 +52,15 @@ The win is real, but it needs 7 precise moves in a row on an 8 s clock (3 s in B
 
 ### Do deliberate timeouts matter?
 
-Yes. Of the 66,682 positions reachable without timeouts, **3,420 (5.1%) change value** once a deliberate timeout is allowed, and every change is **draw → win**. Waiting out the clock to drop your oldest mark without placing is a genuine tempo weapon. The bot table includes it, so Hard and Impossible will sometimes do it on purpose.
+Yes. Of the 66,682 positions reachable without timeouts, **3,420 (5.1%) change value** once a deliberate timeout is allowed. The changes go both ways, because both players get the extra option:
+
+| Better for the player to move (2,172) | | Worse for the player to move (1,248) | |
+|---|---|---|---|
+| draw → win | 1,060 | win → draw | 528 |
+| loss → win | 840 | win → loss | 392 |
+| loss → draw | 272 | draw → loss | 328 |
+
+Waiting out the clock to drop your oldest mark without placing is a genuine tempo weapon. It also gives the defender new resources, which is why some wins disappear. It doesn't change the opening: the start is a 13-ply first-player win either way. The bot table includes timeouts, so Hard and Impossible will sometimes time out on purpose.
 
 ### Puzzle supply (for Daily Fade, v1.1)
 
@@ -87,10 +95,16 @@ Each 4×4 position space has up to **5.88 billion** slots (654 M mark arrangemen
 
 For comparison, the same tactical-blunder measure on 3×3 is 40%; the exact mistake rate is 62%. All 4×4 numbers are **sampled or depth-limited**, not exact.
 
+> **Caveat for L4.** Two of these metrics are weak proxies on L4.
+> - The 3-ply blunder test rarely fires there: even after a bad move, the opponent needs four aligned marks, which takes longer than 3 plies. So 11% understates how punishing L4 is, and isn't comparable with the L3 figures.
+> - "73% of random games hit the cap" shows that *random* play rarely completes four in a row, not that human games would be drawish.
+>
+> The firm L4 facts are that there is no forced win to depth 19–20 and no exact table.
+
 ## Recommendation: keep 3×3, K3, L3
 
 1. **4×4 L3 is broken.** The first player makes an open double threat with 3 marks.
-2. **4×4 L4 is the opposite problem.** Four in a row with only four marks is easy to block. Random play rarely ends before the cap, and it is very forgiving (11% blunder rate). On a 3–8 s shot clock it would feel like shuffling, not dueling. There is no perfect-play table either, so the Hard and Impossible bots would need heuristic search, and "Impossible" couldn't be guaranteed.
+2. **4×4 L4 is likely the opposite problem.** Four in a row with only four marks is easy to block, and random play rarely ends before the cap (see the caveat above: this is suggestive, not proven for human play). On a 3–8 s shot clock it risks feeling like shuffling, not dueling. There is no perfect-play table either, so the Hard and Impossible bots would need heuristic search, and "Impossible" couldn't be guaranteed.
 3. **3×3 is sharp and deep for humans.**
    - It is a first-player win, but only by an unintuitive edge opening followed by a single correct move every turn. Most other moves throw it away: a random move is a mistake 62% of the time.
    - Rounds resolve in about 13 plies, which fits the shot clock and the 30-ply sudden death.
