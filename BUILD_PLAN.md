@@ -19,12 +19,14 @@ The first APK you can install arrives at the end of **Phase 2** (offline: bot + 
 - **Early clinch** (2026-11-02): a match ends as soon as the trailing player can no longer draw level (e.g. 2–0 after 4 rounds with 2 draws). Otherwise first to 3, or 5 rounds.
 - **"Next to fade" pulse** (2026-11-02): only on a player's oldest mark when they hold K marks (it fades on their next placement). Departs from PRD §2.2 "always". A last-second timeout warning on the oldest mark is fine. Engine: `nextToFade()` (K marks) and `oldestMark()` (what a timeout fades).
 - Engine details (picked, not debated): timeouts count as plies for the 30/60 thresholds; a win on ply 60 beats the cap; a 0-mark timeout still counts toward 3 consecutive; placing resets only your own counter; counters reset each round; the round-1 starter is passed in (the engine never calls `Math.random`).
+- **Board: 3×3, K3, L3** (2026-11-02, after the solver report). It is a forced first-player win in 13 plies, but only via an edge opening and then a single winning move each turn. 4×4 L3 is a 5-ply win and 4×4 L4 is likely drawish with no perfect bot. See `tools/solver/REPORT.md`.
+- **Round starters keep plain alternation** (2026-11-02), round 5 included. Revisit with real match data (options: round-4 loser starts, or a fresh coin flip).
 - Import style (verified 2026-11-02 in Jest/Babel, Node strip-types, Deno 2.9 and tsc 6): relative imports with explicit `.ts`, erasable TS only (no enums/namespaces). Metro still to verify in Phase 1.
 
 ## Road to the first APK (do in this order)
 Each step uses the matching phase below, trimmed to the v1 scope. ⏸ marks a checkpoint: stop, show Sarath, and wait.
 
-1. [x] **Phase 0: engine + solver.** Done 2026-11-02; see `tools/solver/REPORT.md`. Board-size decision pending with Sarath.
+1. [x] **Phase 0: engine + solver.** Done 2026-11-02; see `tools/solver/REPORT.md`. Sarath chose 3×3.
    - Engine covers both round rules and match rules.
    - Timeout is a legal action in the solver, with per-player consecutive-timeout counters in the state.
    - The solver ignores the 30/60-move counters and treats unresolved cycles as draws; say so in the report.
