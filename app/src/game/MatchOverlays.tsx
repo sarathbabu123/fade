@@ -135,10 +135,14 @@ interface ResultProps {
   reason: string;
   onRematch: () => void;
   onHome: () => void;
+  rematchTitle?: string;
+  rematchDisabled?: boolean;
+  /** Extra line under the score, e.g. "Sam wants a rematch!". */
+  note?: string;
 }
 
 /** Full-screen match result: crown drop + confetti for a win, a calm card for a loss. */
-export function MatchResult({ outcome, title, winner, score, reason, onRematch, onHome }: ResultProps) {
+export function MatchResult({ outcome, title, winner, score, reason, onRematch, onHome, rematchTitle, rematchDisabled, note }: ResultProps) {
   const { width, height } = useWindowDimensions();
   const reduce = useReduceMotion();
   const color = outcome === 'loss' ? colors.textDim : winner ? colorOf(winner) : colors.text;
@@ -159,8 +163,9 @@ export function MatchResult({ outcome, title, winner, score, reason, onRematch, 
           <AnimatedNumber value={score.O} style={{ ...type.number, fontSize: 48, color: colors.o }} />
         </View>
         <Text style={type.bodyDim}>{reason}</Text>
+        {note ? <Text style={[type.label, { color: colors.gold }]}>{note}</Text> : null}
         <View style={styles.buttons}>
-          <GlowButton title="Rematch" variant={outcome === 'loss' ? 'coral' : 'cyan'} onPress={onRematch} />
+          <GlowButton title={rematchTitle ?? 'Rematch'} disabled={rematchDisabled} variant={outcome === 'loss' ? 'coral' : 'cyan'} onPress={onRematch} />
           <GlowButton title="Home" variant="glass" size="md" onPress={onHome} />
         </View>
       </View>

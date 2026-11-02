@@ -16,3 +16,4 @@ supabase/.temp/
 supabase/.branches/
 .emulator.log
 .metro.log
+.shot.png

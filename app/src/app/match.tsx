@@ -3,7 +3,8 @@ import type { BotLevel, Player, TimeControl } from '@fade/engine';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import { Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
-import { cancelAnimation, Easing, useSharedValue, withTiming } from 'react-native-reanimated';
+import { cancelAnimation, Easing, FadeIn, FadeOut, useSharedValue, withDelay, withTiming } from 'react-native-reanimated';
+import Animated from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { BottomSheet } from '@/components/BottomSheet';
@@ -12,12 +13,13 @@ import { Board } from '@/game/Board';
 import { MatchResult, RoundBanner, SuddenDeathBanner, TimeStamp, Vignette } from '@/game/MatchOverlays';
 import { PlayerCard } from '@/game/PlayerCard';
 import { playSound, preloadSounds } from '@/game/sounds';
-import { StartRace } from '@/game/StartRace';
+import { OnlineStartRace, StartRace } from '@/game/StartRace';
+import type { OnlineExtras } from '@/game/useOnlineMatch';
 import type { MatchController } from '@/game/types';
 import { useLocalMatch } from '@/game/useLocalMatch';
 import { haptic, useSettings } from '@/lib/settings';
 import type { AvatarId } from '@/lib/settings';
-import { colors, spacing, type } from '@/theme';
+import { colors, radii, spacing, type, withAlpha } from '@/theme';
 
 const LEVEL_NAMES: Record<BotLevel, string> = { easy: 'EASY', medium: 'MEDIUM', hard: 'HARD', impossible: 'IMPOSSIBLE' };
 const BOT_AVATAR: AvatarId = { glyph: 'eye', color: 'cyan' };
@@ -34,7 +36,7 @@ export default function MatchRoute() {
   return <MatchScreen ctl={ctl} />;
 }
 
-export function MatchScreen({ ctl }: { ctl: MatchController }) {
+export function MatchScreen({ ctl, online }: { ctl: MatchController; online?: OnlineExtras }) {
   const { width } = useWindowDimensions();
   const insets = useSafeAreaInsets();
   const username = useSettings((s) => s.username) ?? 'You';
@@ -49,9 +51,17 @@ export function MatchScreen({ ctl }: { ctl: MatchController }) {
   useEffect(() => preloadSounds(), []);
 
   const names: Record<Player, string> =
-    ctl.kind === 'bot' ? { X: username, O: 'FADE Bot' } : ctl.kind === 'pass' ? { X: 'Player X', O: 'Player O' } : { X: 'X', O: 'O' };
+    ctl.kind === 'bot'
+      ? { X: username, O: 'FADE Bot' }
+      : ctl.kind === 'pass'
+        ? { X: 'Player X', O: 'Player O' }
+        : { X: online?.players?.X.name ?? 'X', O: online?.players?.O.name ?? 'O' };
   const avatars: Record<Player, AvatarId> =
-    ctl.kind === 'bot' ? { X: myAvatar, O: BOT_AVATAR } : { X: { glyph: 'bolt', color: 'coral' }, O: { glyph: 'moon', color: 'cyan' } };
+    ctl.kind === 'bot'
+      ? { X: myAvatar, O: BOT_AVATAR }
+      : online?.players
+        ? { X: online.players.X.avatar, O: online.players.O.avatar }
+        : { X: { glyph: 'bolt', color: 'coral' }, O: { glyph: 'moon', color: 'cyan' } };
 
   const showFlash = (f: Flash, ms: number) => {
     setFlash(f);
@@ -64,10 +74,12 @@ export function MatchScreen({ ctl }: { ctl: MatchController }) {
       cancelAnimation(clock);
       return;
     }
-    const elapsed = Date.now() - ctl.turnStartedAt;
-    const remaining = Math.max(0, ctl.turnMs - elapsed);
-    clock.value = remaining / ctl.turnMs;
-    clock.value = withTiming(0, { duration: remaining, easing: Easing.linear });
+    // Online turns can start slightly in the future (server start pause): hold the ring full until then.
+    const wait = Math.max(0, ctl.turnStartedAt - Date.now());
+    const elapsed = Math.max(0, Date.now() - ctl.turnStartedAt);
+    const remaining = Math.max(0, ctl.turnMs - elapsed) + wait;
+    clock.value = Math.min(1, (remaining - wait) / ctl.turnMs);
+    clock.value = withDelay(wait, withTiming(0, { duration: remaining - wait, easing: Easing.linear }));
     // Heartbeat haptic at 1 s left, quiet ticks in the last second.
     const t1 = setTimeout(() => {
       haptic.medium();
@@ -202,7 +214,10 @@ export function MatchScreen({ ctl }: { ctl: MatchController }) {
 
       <Vignette clock={clock} turnMs={ctl.turnMs} color={colorOf(toMove)} active={phase === 'playing' && interactive} />
 
-      {phase === 'race' && (
+      {phase === 'race' && online && !online.aborted && (
+        <OnlineStartRace goAtLocal={online.goAtLocal} names={names} me={ctl.me} starter={online.raceStarter} onTap={online.raceTap} />
+      )}
+      {phase === 'race' && !online && (
         <StartRace
           mode={ctl.kind === 'pass' ? 'pass' : 'bot'}
           botLevel={ctl.botLevel}
@@ -219,7 +234,22 @@ export function MatchScreen({ ctl }: { ctl: MatchController }) {
           reason={result.reason}
           onRematch={ctl.rematch}
           onHome={() => router.back()}
+          rematchTitle={online?.rematchRequested ? `Waiting for ${ctl.me ? names[other(ctl.me)] : 'opponent'}…` : 'Rematch'}
+          rematchDisabled={online?.rematchRequested}
+          note={online?.opponentWantsRematch && !online.rematchRequested ? `${ctl.me ? names[other(ctl.me)] : 'Opponent'} wants a rematch!` : undefined}
         />
+      )}
+      {online?.aborted && (
+        <Animated.View entering={FadeIn} style={styles.aborted}>
+          <Text style={type.title}>Match cancelled</Text>
+          <Text style={[type.bodyDim, styles.center]}>A player left before the first move.</Text>
+          <GlowButton title="Home" variant="glass" size="md" onPress={() => router.back()} />
+        </Animated.View>
+      )}
+      {online?.error && phase !== 'finished' && (
+        <Animated.View key={online.error} entering={FadeIn} exiting={FadeOut} style={styles.toast} pointerEvents="none">
+          <Text style={[type.label, styles.center]}>{online.error}</Text>
+        </Animated.View>
       )}
 
       <BottomSheet visible={confirm !== null} onClose={() => setConfirm(null)} title={confirm === 'resign' ? 'Resign this match?' : 'Leave this match?'}>
@@ -228,7 +258,9 @@ export function MatchScreen({ ctl }: { ctl: MatchController }) {
             ? ctl.kind === 'pass'
               ? `${names[toMove ?? 'X']} (to move) resigns and loses the match.`
               : 'You lose the match.'
-            : 'The match ends here.'}
+            : ctl.kind === 'online'
+              ? 'Leaving resigns: you lose the match.'
+              : 'The match ends here.'}
         </Text>
         <GlowButton
           title={confirm === 'resign' ? 'Resign' : 'Leave'}
@@ -238,7 +270,10 @@ export function MatchScreen({ ctl }: { ctl: MatchController }) {
             const c = confirm;
             setConfirm(null);
             if (c === 'resign') ctl.resign();
-            else router.back();
+            else {
+              if (ctl.kind === 'online') ctl.resign();
+              router.back();
+            }
           }}
         />
         <GlowButton title="Keep playing" variant="glass" size="md" onPress={() => setConfirm(null)} />
@@ -253,4 +288,26 @@ const styles = StyleSheet.create({
   headerBtn: { fontSize: 20, color: colors.textDim, paddingHorizontal: spacing.xs },
   boardWrap: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   center: { textAlign: 'center' },
+  aborted: {
+    position: 'absolute',
+    top: 0,
+    right: 0,
+    bottom: 0,
+    left: 0,
+    zIndex: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.lg,
+    padding: spacing.xl,
+    backgroundColor: withAlpha(colors.nightDeep, 0.94),
+  },
+  toast: {
+    position: 'absolute',
+    left: spacing.xl,
+    right: spacing.xl,
+    bottom: 140,
+    padding: spacing.md,
+    borderRadius: radii.md,
+    backgroundColor: withAlpha(colors.alarm, 0.85),
+  },
 });

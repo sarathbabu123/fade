@@ -125,3 +125,76 @@ const styles = StyleSheet.create({
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: spacing.md, paddingHorizontal: spacing.xl },
   big: { fontFamily: fonts.displayHeavy, fontSize: 38, letterSpacing: 2, textShadowRadius: 18, textAlign: 'center' },
 });
+
+interface OnlineProps {
+  /** GO time on this phone's clock (server time minus measured offset). */
+  goAtLocal: number;
+  names: Record<Player, string>;
+  me: Player | null;
+  /** Known once the server resolved the race. */
+  starter: Player | null;
+  onTap: (tap: RaceTap) => void;
+}
+
+/** Online start race: GO is scheduled by the server; the reaction is measured on this phone. */
+export function OnlineStartRace({ goAtLocal, names, me, starter, onTap }: OnlineProps) {
+  const [stage, setStage] = useState<Stage>(() => (Date.now() >= goAtLocal ? 'go' : 'ready'));
+  const [mine, setMine] = useState<RaceTap | null>(null);
+  const goPerf = useRef(0);
+
+  useEffect(() => {
+    playSound('ready');
+    const wait = Math.max(0, goAtLocal - Date.now());
+    const id = setTimeout(() => {
+      goPerf.current = performance.now();
+      setStage('go');
+      playSound('go');
+      haptic.light();
+    }, wait);
+    return () => clearTimeout(id);
+  }, [goAtLocal]);
+
+  useEffect(() => {
+    if (starter) {
+      setStage('result');
+      haptic.medium();
+    }
+  }, [starter]);
+
+  const tap = () => {
+    if (mine || starter || !me) return;
+    const t: RaceTap = goPerf.current === 0 ? { kind: 'falseStart' } : { kind: 'tap', reactionMs: performance.now() - goPerf.current };
+    setMine(t);
+    if (t.kind === 'falseStart') playSound('error');
+    haptic.light();
+    onTap(t);
+  };
+
+  const label =
+    stage === 'result' && starter
+      ? `${starter === me ? 'YOU START' : `${names[starter].toUpperCase()} STARTS`}`
+      : stage === 'go'
+        ? 'GO!'
+        : 'GET READY…';
+  const labelColor = stage === 'go' ? colors.gold : stage === 'result' ? (starter === 'X' ? colors.x : colors.o) : colors.text;
+  const hint =
+    stage === 'result'
+      ? ''
+      : mine?.kind === 'falseStart'
+        ? 'False start! Waiting for your opponent…'
+        : mine?.kind === 'tap'
+          ? `${Math.round(mine.reactionMs)} ms · waiting for your opponent…`
+          : 'Tap first after GO to move first';
+
+  return (
+    <Animated.View entering={FadeIn} exiting={FadeOut} style={[StyleSheet.absoluteFill, styles.root]}>
+      <Pressable style={StyleSheet.absoluteFill} onPressIn={tap} accessibilityLabel="Tap after GO" />
+      <View style={StyleSheet.absoluteFill} pointerEvents="none">
+        <Animated.View key={stage} entering={ZoomIn.springify().damping(12)} style={styles.center}>
+          <Text style={[styles.big, { color: labelColor, textShadowColor: labelColor }]}>{label}</Text>
+          {hint ? <Text style={[type.bodyDim, mine?.kind === 'falseStart' && { color: colors.alarm }]}>{hint}</Text> : null}
+        </Animated.View>
+      </View>
+    </Animated.View>
+  );
+}
