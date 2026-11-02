@@ -69,8 +69,9 @@ export default function PlayScreen() {
         subtitle="Send a code on WhatsApp"
         icon={<SwordsIcon color={colors.onAccent} />}
         variant="coral"
+        onPress={() => router.push('/challenge')}
       />
-      <GlowButton title="Enter a code" icon={<KeyIcon />} variant="glass" size="md" />
+      <GlowButton title="Enter a code" icon={<KeyIcon />} variant="glass" size="md" onPress={() => router.push('/join')} />
       <GlowButton
         title="Play the bot"
         subtitle="Easy, Medium, Hard, Impossible"

@@ -10,6 +10,7 @@ import { StyleSheet, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import { AuroraBackground } from '@/components/AuroraBackground';
+import { IncomingChallenge } from '@/components/IncomingChallenge';
 import { useAccount } from '@/lib/account';
 import { useSettingsHydrated } from '@/lib/settings';
 import { colors } from '@/theme';
@@ -53,6 +54,7 @@ export default function RootLayout() {
         ) : (
           <View style={styles.root} />
         )}
+        {ready && <IncomingChallenge />}
       </QueryClientProvider>
     </GestureHandlerRootView>
   );
