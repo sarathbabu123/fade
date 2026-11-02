@@ -55,7 +55,14 @@ export interface OnlineExtras {
 const TICK_SLACK_MS = 1100;
 
 export function useOnlineMatch(matchId: string): MatchController & { online: OnlineExtras } {
-  const userId = useSettings((s) => s.userId);
+  const settingsUserId = useSettings((s) => s.userId);
+  const [sessionUserId, setSessionUserId] = useState<string | null>(null);
+  useEffect(() => {
+    void supabase.auth.getSession().then(({ data }) => setSessionUserId(data.session?.user.id ?? null));
+  }, []);
+  const userId = sessionUserId ?? settingsUserId;
+  // Local time of my last optimistic move: the opponent's clock starts then, not at the old turn start.
+  const [optimisticAt, setOptimisticAt] = useState(0);
   const [row, setRow] = useState<MatchRow | null>(null);
   const [optimistic, setOptimistic] = useState<MatchState | null>(null);
   const [players, setPlayers] = useState<Record<Player, OnlinePlayer> | null>(null);
@@ -119,6 +126,12 @@ export function useOnlineMatch(matchId: string): MatchController & { online: Onl
       });
   }, [px, po]);
 
+  useEffect(() => {
+    if (!error) return;
+    const id = setTimeout(() => setError(null), 2500);
+    return () => clearTimeout(id);
+  }, [error]);
+
   const me: Player | null = row && userId ? (row.player_x === userId ? 'X' : row.player_o === userId ? 'O' : null) : null;
   const state = optimistic ?? row?.state ?? null;
 
@@ -158,8 +171,11 @@ export function useOnlineMatch(matchId: string): MatchController & { online: Onl
       } catch {
         return false;
       }
+      // During the server's start pause the turn hasn't begun yet: don't send a move it will reject.
+      if (r.turn_started_at && Date.now() < toLocalTime(Date.parse(r.turn_started_at)) - 200) return false;
       // Show the mark immediately; the server confirms (or we roll back).
       setOptimistic(next);
+      setOptimisticAt(Date.now());
       void callFade<{ match: MatchRow }>('move', { matchId, roundNo: s.roundNo, ply: s.round.ply, cell })
         .then((res) => accept(res.match))
         .catch((e: GameServerError) => {
@@ -200,7 +216,7 @@ export function useOnlineMatch(matchId: string): MatchController & { online: Onl
   else if (row?.status === 'active' && state) phase = state.status === 'playing' ? 'playing' : state.status === 'roundOver' ? 'roundOver' : 'finished';
 
   // The clock: turn start in local time. During the server's start pause it sits full.
-  const turnStartedAt = row?.turn_started_at ? toLocalTime(Date.parse(row.turn_started_at)) : 0;
+  const turnStartedAt = optimistic ? optimisticAt : row?.turn_started_at ? toLocalTime(Date.parse(row.turn_started_at)) : 0;
   const opp: Player = me === 'O' ? 'X' : 'O';
 
   return {
