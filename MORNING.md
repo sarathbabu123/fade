@@ -6,10 +6,10 @@ This is the hand-off note from the overnight build. I update it after every step
 - [x] Step 1: engine + solver (3×3 chosen; report in `tools/solver/REPORT.md`)
 - [x] Step 2: app shell + Neon Ink theme (checked on the emulator)
 - [x] Step 3: offline game (board, animations, sounds, bot with 4 levels, pass & play, start race)
-- [ ] Step 4: Supabase (schema, RLS, anonymous auth)
-- [ ] Step 5: online matches
-- [ ] Step 6: challenge codes + WhatsApp share
-- [ ] Step 7: ratings (first to be cut if short on time)
+- [x] Step 4: Supabase (schema, RLS, anonymous auth, profile sync)
+- [x] Step 5: online matches (server-checked moves, clocks, realtime, rematch)
+- [x] Step 6: challenge codes + WhatsApp share, friends list, incoming-challenge banner
+- [ ] Step 7: ratings — cut from the first APK, coming in an update
 - [ ] Step 8: final APK + download link
 
 ## APK

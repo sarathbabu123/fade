@@ -36,6 +36,7 @@ The first APK you can install arrives at the end of **Phase 2** (offline: bot + 
 - **Cut from v1** (decided while building): the 15 s abort rule, the 20 s disconnect forfeit, the pg_cron cleanup and ratings. Leaving during the start race aborts the match; after that, resign or time out.
 - **Latency** (2026-11-02, measured from this PC): REST ~290 ms; Edge Function at the nearest edge 0.85–2.7 s, because every DB call crossed back to Frankfurt. Fixed by pinning calls to `eu-central-1` (`x-region` header) and verifying JWTs locally (JWKS, ES256). Now **553 ms median, 725 ms p90**.
 - **Move grace 800 ms** (PRD said 250 ms, which assumed a Mumbai server). Engine `MATCH_TIMING.moveGraceMs`.
+- **Avast HTTPS scanning** breaks TLS for the emulator (Android does not trust Avast's root). Sarath turned off Avast's shields on 2026-11-02 for testing. It does not affect real phones.
 - Import style (verified 2026-11-02 in Jest/Babel, Node strip-types, Deno 2.9 and tsc 6): relative imports with explicit `.ts`, erasable TS only (no enums/namespaces). Metro verified 2026-11-02 (the Android export bundles `@fade/engine`).
 
 ## Road to the first APK (do in this order)
@@ -54,18 +55,18 @@ Each step uses the matching phase below, trimmed to the v1 scope. ⏸ marks a ch
    - Core animations: placement strokes, next-to-fade pulse, particle fade, clock ring, timeout, win beam, result takeover.
    - Sounds, haptics, bot (4 levels), pass & play.
    - Remaining §7.2 polish can come after v1.
-4. [ ] **Phase 3: Supabase.**
+4. [x] **Phase 3: Supabase.** Done 2026-11-02: schema + RLS, anonymous auth + profile sync, sync-engine; `npm run online-smoke` checks RLS against the live project.
    - Migrations + strict RLS (only the tables v1 needs).
    - Anonymous auth + username/avatar onboarding.
    - sync-engine script and RLS tests, run against the remote project.
-5. [ ] **Phase 4: online matches.**
+5. [x] **Phase 4: online matches.** Done 2026-11-02: one `fade` function, server clocks with tick catch-up, realtime + poll fallback, optimistic moves with rollback, rematch. Two-player smoke test passes.
    - Edge Functions for create/accept challenge, submit-move, claim-timeout, resign.
    - Server clocks, realtime, optimistic moves, rematch.
-6. [ ] **Phase 5 (lite): challenge codes.**
+6. [x] **Phase 5 (lite): challenge codes.** Done 2026-11-02: code screen with WhatsApp share, join screen, friends list with presence + Challenge, incoming-challenge banner.
    - 6-letter code with a "Share on WhatsApp" button: prefilled text, the code and the APK link.
    - "Enter code" screen. Joining by code makes you friends.
    - Friends list with presence and a Challenge button.
-7. [ ] **Phase 6 (lite): ratings.**
+7. [ ] **Phase 6 (lite): ratings.** CUT from the first APK (Sarath: cut ratings first if short on time).
    - Glicko-2 package with tests.
    - Server-side update at match end; rated/casual toggle.
    - Profile with rating graph and stats; friends leaderboard.
