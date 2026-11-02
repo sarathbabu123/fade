@@ -23,14 +23,17 @@ const heroRound = [0, 2, 4, 6, 5].reduce((s, c) => applyMove(s, c), createRound(
 const HERO: Cell[] = board(heroRound);
 const HERO_FADING = [nextToFade(heroRound, 'X')].filter((c): c is number => c !== null);
 
-type TimeControl = 'rapid' | 'blitz';
 
 export default function PlayScreen() {
   const avatar = useSettings((s) => s.avatar);
   const username = useSettings((s) => s.username);
-  const [sheet, setSheet] = useState(false);
-  const [tc, setTc] = useState<TimeControl>('rapid');
-  const [rated, setRated] = useState<'rated' | 'casual'>('rated');
+  const [sheet, setSheet] = useState<'tc' | 'bot' | null>(null);
+  const tc = useSettings((s) => s.timeControl);
+  const rated = useSettings((s) => (s.rated ? 'rated' : 'casual'));
+  const botLevel = useSettings((s) => s.botLevel);
+  const set = useSettings((s) => s.set);
+  const setTc = (v: 'rapid' | 'blitz') => set({ timeControl: v });
+  const setRated = (v: 'rated' | 'casual') => set({ rated: v === 'rated' });
 
   return (
     <Screen tabs>
@@ -52,7 +55,7 @@ export default function PlayScreen() {
         <MiniBoard cells={HERO} fading={HERO_FADING} size={112} />
       </GlassCard>
 
-      <Pressable style={styles.tcPill} onPress={() => setSheet(true)} accessibilityLabel="Change time control">
+      <Pressable style={styles.tcPill} onPress={() => setSheet('tc')} accessibilityLabel="Change time control">
         <View style={[styles.dot, { backgroundColor: tc === 'rapid' ? colors.o : colors.x }]} />
         <Text style={type.label}>
           {tc === 'rapid' ? 'Rapid · 8 s' : 'Blitz · 3 s'}
@@ -73,10 +76,17 @@ export default function PlayScreen() {
         subtitle="Easy, Medium, Hard, Impossible"
         icon={<BotIcon color={colors.onAccent} />}
         variant="cyan"
+        onPress={() => setSheet('bot')}
       />
-      <GlowButton title="Pass & Play" subtitle="Two players, one phone" icon={<PassIcon />} variant="glass" />
+      <GlowButton
+        title="Pass & Play"
+        subtitle="Two players, one phone"
+        icon={<PassIcon />}
+        variant="glass"
+        onPress={() => router.push({ pathname: '/match', params: { mode: 'pass', tc } })}
+      />
 
-      <BottomSheet visible={sheet} onClose={() => setSheet(false)} title="Time control">
+      <BottomSheet visible={sheet === 'tc'} onClose={() => setSheet(null)} title="Time control">
         <Segmented
           value={tc}
           onChange={setTc}
@@ -95,7 +105,40 @@ export default function PlayScreen() {
             { value: 'casual', label: 'Casual', hint: 'JUST FOR FUN' },
           ]}
         />
-        <GlowButton title="Done" variant="coral" size="md" onPress={() => setSheet(false)} />
+        <GlowButton title="Done" variant="coral" size="md" onPress={() => setSheet(null)} />
+      </BottomSheet>
+
+      <BottomSheet visible={sheet === 'bot'} onClose={() => setSheet(null)} title="Play the bot">
+        <Segmented
+          value={botLevel}
+          onChange={(v) => set({ botLevel: v })}
+          accent={colors.o}
+          options={[
+            { value: 'easy', label: 'Easy' },
+            { value: 'medium', label: 'Med' },
+            { value: 'hard', label: 'Hard' },
+            { value: 'impossible', label: 'Max' },
+          ]}
+        />
+        <Text style={[type.bodyDim, styles.center]}>
+          {botLevel === 'impossible'
+            ? 'Perfect play. When it moves first, it cannot lose.'
+            : botLevel === 'hard'
+              ? 'Near-perfect, slips about one move in ten.'
+              : botLevel === 'medium'
+                ? 'Takes every win, sometimes misses a block.'
+                : 'Mostly random. Good for learning the fade.'}
+        </Text>
+        <Text style={[type.caption, styles.center]}>{tc === 'rapid' ? 'RAPID · 8 S A MOVE' : 'BLITZ · 3 S A MOVE'} · NOT RATED</Text>
+        <GlowButton
+          title="Start"
+          variant="cyan"
+          size="md"
+          onPress={() => {
+            setSheet(null);
+            router.push({ pathname: '/match', params: { mode: 'bot', level: botLevel, tc } });
+          }}
+        />
       </BottomSheet>
     </Screen>
   );
@@ -120,5 +163,6 @@ const styles = StyleSheet.create({
   },
   dot: { width: 8, height: 8, borderRadius: 4 },
   tcDim: { color: colors.textDim, fontFamily: type.body.fontFamily },
+  center: { textAlign: 'center' },
   tcChange: { ...type.caption, marginLeft: 'auto', color: colors.o },
 });

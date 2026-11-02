@@ -66,9 +66,9 @@ export function GlowButton({ title, subtitle, icon, onPress, variant = 'coral', 
             style={[StyleSheet.absoluteFill, { borderRadius: size === 'sm' ? radii.pill : radii.lg }]}
           />
         )}
-        <View style={[styles.row, size === 'sm' && styles.rowSmall]}>
+        <View style={[styles.row, size === 'sm' && styles.rowSmall, !icon && styles.rowCentered]}>
           {icon}
-          <View style={styles.texts}>
+          <View style={[styles.texts, !icon && styles.textsCentered]}>
             <Text style={[type.label, size === 'lg' && styles.labelLarge, { color: fg }]} numberOfLines={1}>
               {title}
             </Text>
@@ -90,7 +90,9 @@ const styles = StyleSheet.create({
   disabled: { opacity: 0.4 },
   row: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: spacing.xl, gap: spacing.md },
   rowSmall: { paddingHorizontal: spacing.lg, gap: spacing.sm, justifyContent: 'center' },
+  rowCentered: { justifyContent: 'center' },
   texts: { flexShrink: 1 },
+  textsCentered: { alignItems: 'center' },
   labelLarge: { fontSize: 18 },
   subtitle: { fontSize: 13, lineHeight: 17, marginTop: 1 },
 });

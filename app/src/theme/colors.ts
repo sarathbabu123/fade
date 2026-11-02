@@ -48,6 +48,7 @@ export type AvatarColor = keyof typeof avatarColors;
 
 /** Hex colour + alpha (0–1) as an 8-digit hex string. */
 export function withAlpha(hex: string, alpha: number): string {
+  'worklet';
   const a = Math.round(Math.max(0, Math.min(1, alpha)) * 255)
     .toString(16)
     .padStart(2, '0');

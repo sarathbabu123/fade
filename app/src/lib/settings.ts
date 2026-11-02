@@ -21,6 +21,9 @@ interface SettingsState {
   username: string | null;
   avatar: AvatarId;
   onboarded: boolean;
+  timeControl: 'rapid' | 'blitz';
+  rated: boolean;
+  botLevel: 'easy' | 'medium' | 'hard' | 'impossible';
   set: (patch: Partial<Omit<SettingsState, 'set'>>) => void;
 }
 
@@ -33,6 +36,9 @@ export const useSettings = create<SettingsState>()(
       username: null,
       avatar: { glyph: 'bolt', color: 'violet' },
       onboarded: false,
+      timeControl: 'rapid',
+      rated: true,
+      botLevel: 'medium',
       set: (patch) => set(patch),
     }),
     {

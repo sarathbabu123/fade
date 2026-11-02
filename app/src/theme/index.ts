@@ -36,6 +36,7 @@ export const type = {
 
 /** Soft outer glows (RN boxShadow), never hard drop shadows. */
 export function glow(color: string, radius = 18, strength = 0.55): string {
+  'worklet';
   const a = Math.round(strength * 255)
     .toString(16)
     .padStart(2, '0');

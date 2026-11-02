@@ -10,7 +10,7 @@ import {
   vec,
 } from '@shopify/react-native-skia';
 import { memo, useEffect } from 'react';
-import { StyleSheet, useWindowDimensions, View } from 'react-native';
+import { Dimensions, StyleSheet, View } from 'react-native';
 import {
   cancelAnimation,
   Easing,
@@ -24,6 +24,8 @@ import { useReduceMotion } from '@/lib/motion';
 import { colors, withAlpha } from '@/theme';
 
 const LOOP_MS = 28_000;
+/** Soft blobs don't need full resolution: draw at 1/4 size and scale up (16× fewer pixels a frame). */
+const SCALE = 4;
 
 interface BlobSpec {
   color: string;
@@ -53,7 +55,7 @@ function Blob({ spec, t, w, h }: { spec: BlobSpec; t: { value: number }; w: numb
   const r = spec.r * h;
   return (
     <Circle c={c} r={r}>
-      <RadialGradient c={c} r={r} colors={[withAlpha(spec.color, 0.55), withAlpha(spec.color, 0)]} />
+      <RadialGradient c={c} r={r} colors={[withAlpha(spec.color, 0.5), withAlpha(spec.color, 0)]} />
     </Circle>
   );
 }
@@ -63,7 +65,10 @@ function Blob({ spec, t, w, h }: { spec: BlobSpec; t: { value: number }; w: numb
  * grain lives on a separate static canvas so it is drawn once.
  */
 export const AuroraBackground = memo(function AuroraBackground() {
-  const { width: w, height: h } = useWindowDimensions();
+  // Screen (not window) size: edge-to-edge content also runs under the navigation bar.
+  const { width, height } = Dimensions.get('screen');
+  const w = Math.ceil(width / SCALE);
+  const h = Math.ceil(height / SCALE);
   const reduce = useReduceMotion();
   const t = useSharedValue(0);
 
@@ -78,18 +83,18 @@ export const AuroraBackground = memo(function AuroraBackground() {
 
   return (
     <View style={StyleSheet.absoluteFill} pointerEvents="none">
-      <Canvas style={StyleSheet.absoluteFill}>
+      <Canvas style={{ width: w, height: h, transformOrigin: 'top left', transform: [{ scale: SCALE }] }}>
         <Rect x={0} y={0} width={w} height={h}>
           <LinearGradient start={vec(0, 0)} end={vec(0, h)} colors={[colors.night, colors.nightDeep]} />
         </Rect>
-        <Group blendMode="screen">
+        <Group>
           {BLOBS.map((b, i) => (
             <Blob key={i} spec={b} t={t} w={w} h={h} />
           ))}
         </Group>
       </Canvas>
       <Canvas style={StyleSheet.absoluteFill}>
-        <Fill opacity={0.07} blendMode="overlay">
+        <Fill opacity={0.035}>
           <FractalNoise freqX={0.85} freqY={0.85} octaves={2} />
         </Fill>
       </Canvas>
