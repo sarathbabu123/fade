@@ -70,7 +70,7 @@ function Mark({ mark, cs, n, pulse, fading, reduce }: { mark: VisualMark; cs: nu
   const w = Math.max(4, cs * 0.075);
 
   return (
-    <Group origin={vec(cx, cy)} transform={transform} opacity={opacity}>
+    <Group origin={vec(cx, cy)} transform={transform} opacity={fading ? opacity : undefined}>
       {fading && (
         <Circle cx={cx} cy={cy} r={cs * 0.41} color={withAlpha(colors.text, 0.4)} style="stroke" strokeWidth={1.3}>
           <DashPathEffect intervals={[2.5, 5]} />
@@ -79,9 +79,9 @@ function Mark({ mark, cs, n, pulse, fading, reduce }: { mark: VisualMark; cs: nu
       {[a, b].map((p, i) =>
         p ? (
           <Group key={i}>
-            <Path path={p} color={withAlpha(color, fading ? 0.45 : 0.75)} style="stroke" strokeWidth={w * 1.7} strokeCap="round" end={i === 0 ? endA : endB}>
-              <BlurMask blur={w * 1.5} style="normal" />
-            </Path>
+            {/* Glow: two soft wide strokes (cheaper than a blur filter, no layer artifacts). */}
+            <Path path={p} color={withAlpha(color, fading ? 0.08 : 0.14)} style="stroke" strokeWidth={w * 3.4} strokeCap="round" end={i === 0 ? endA : endB} />
+            <Path path={p} color={withAlpha(color, fading ? 0.16 : 0.3)} style="stroke" strokeWidth={w * 2} strokeCap="round" end={i === 0 ? endA : endB} />
             <Path path={p} color={color} style="stroke" strokeWidth={w} strokeCap="round" end={i === 0 ? endA : endB} />
           </Group>
         ) : null,
@@ -258,12 +258,10 @@ export const Board = memo(function Board({ round, roundKey, size, interactive, o
             const p = cs * (i + 1);
             return (
               <Group key={i}>
-                <Line p1={vec(p, inset)} p2={vec(p, size - inset)} color={colors.grid} strokeWidth={2} strokeCap="round">
-                  <BlurMask blur={2} style="solid" />
-                </Line>
-                <Line p1={vec(inset, p)} p2={vec(size - inset, p)} color={colors.grid} strokeWidth={2} strokeCap="round">
-                  <BlurMask blur={2} style="solid" />
-                </Line>
+                <Line p1={vec(p, inset)} p2={vec(p, size - inset)} color={withAlpha(colors.grid, 0.18)} strokeWidth={6} strokeCap="round" />
+                <Line p1={vec(inset, p)} p2={vec(size - inset, p)} color={withAlpha(colors.grid, 0.18)} strokeWidth={6} strokeCap="round" />
+                <Line p1={vec(p, inset)} p2={vec(p, size - inset)} color={colors.grid} strokeWidth={2} strokeCap="round" />
+                <Line p1={vec(inset, p)} p2={vec(size - inset, p)} color={colors.grid} strokeWidth={2} strokeCap="round" />
               </Group>
             );
           })}

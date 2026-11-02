@@ -1,4 +1,4 @@
-import { BlurMask, Canvas, Circle, DashPathEffect, Group, Line, Path, Skia, vec } from '@shopify/react-native-skia';
+import { Canvas, Circle, DashPathEffect, Group, Line, Path, Skia, vec } from '@shopify/react-native-skia';
 import { memo, useEffect, useMemo } from 'react';
 import {
   cancelAnimation,
@@ -40,9 +40,8 @@ function Mark({ kind, cx, cy, s, opacity }: { kind: 'X' | 'O'; cx: number; cy: n
   const w = Math.max(3, s * 0.085);
   return (
     <Group opacity={opacity}>
-      <Path path={path} color={withAlpha(color, 0.75)} style="stroke" strokeWidth={w * 1.6} strokeCap="round">
-        <BlurMask blur={w * 1.4} style="normal" />
-      </Path>
+      <Path path={path} color={withAlpha(color, 0.14)} style="stroke" strokeWidth={w * 3.4} strokeCap="round" />
+      <Path path={path} color={withAlpha(color, 0.3)} style="stroke" strokeWidth={w * 2} strokeCap="round" />
       <Path path={path} color={color} style="stroke" strokeWidth={w} strokeCap="round" />
     </Group>
   );
