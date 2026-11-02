@@ -7,6 +7,7 @@ import {
   deserialize,
   EngineError,
   forfeitDisconnect,
+  MATCH_TIMING,
   matchMove,
   matchTimeout,
   resign,
@@ -48,6 +49,7 @@ describe('match rules', () => {
     expect(DEFAULT_MATCH_CONFIG.timeControl).toBe('rapid');
     expect(TIME_CONTROLS.rapid).toEqual({ moveMs: 8000, suddenDeathMs: 4000 });
     expect(TIME_CONTROLS.blitz).toEqual({ moveMs: 3000, suddenDeathMs: 1500 });
+    expect(MATCH_TIMING).toEqual({ abortAfterMs: 15_000, disconnectForfeitMs: 20_000, moveGraceMs: 800 });
   });
 
   it('the starting player alternates every round, draws included', () => {

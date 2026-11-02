@@ -53,6 +53,10 @@ Use the latest stable versions and check current docs before using an API. Do no
 - `npm run typecheck` — tsc for engine (no Node types allowed) and solver
 - `npm run solve -- --budget-sec=300` — re-solve 3×3, rewrite `app/assets/bot/table-3x3.json` and `tools/solver/out/results.json` (4×4 runs are time-boxed by the budget)
 - Deno is not installed globally; `npx -y deno` hangs. Run the cached binary directly: `"$LOCALAPPDATA/npm-cache/_npx/42b366dd278b0c9f/node_modules/@deno/win32-x64/deno.exe" check --no-config <file>`
-- `npm run sync-engine` — copy engine + rating into Edge Functions
+- `npm run sync-engine` — copy engine into `supabase/functions/_shared/engine` (generated)
+- `npx -y supabase@latest functions deploy fade --use-api --no-verify-jwt --yes` — deploy the game server (after sync-engine)
+- `npx -y supabase@latest db push --remote -p "$SUPABASE_DB_PASSWORD" --yes` — apply migrations
+- `npm run online-smoke` — two anonymous players play a full match against the real project (needs .env loaded)
+- Deno type-check needs `DENO_TLS_CA_STORE=system` on this PC (TLS interception)
 - `npx expo start` — run the app in Expo Go
 - `eas build -p android --profile preview --non-interactive` — build the APK

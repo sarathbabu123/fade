@@ -17,8 +17,11 @@ export const MATCH_TIMING = {
   abortAfterMs: 15_000,
   /** A player disconnected this long in total during a round forfeits the match. */
   disconnectForfeitMs: 20_000,
-  /** Network grace added to every turn deadline. */
-  moveGraceMs: 250,
+  /**
+   * Network grace added to every turn deadline. 800 ms, not the PRD's 250 ms: the server
+   * is in Frankfurt and players are in India (BUILD_PLAN decision, 2026-11-02).
+   */
+  moveGraceMs: 800,
 } as const;
 
 /**

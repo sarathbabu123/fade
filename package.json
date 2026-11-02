@@ -9,7 +9,9 @@
   "scripts": {
     "test": "jest",
     "typecheck": "tsc -p packages/engine && tsc -p tools/solver",
-    "solve": "node --experimental-strip-types --disable-warning=ExperimentalWarning tools/solver/src/cli.ts"
+    "solve": "node --experimental-strip-types --disable-warning=ExperimentalWarning tools/solver/src/cli.ts",
+    "sync-engine": "node tools/scripts/sync-engine.mjs",
+    "online-smoke": "node --experimental-strip-types --disable-warning=ExperimentalWarning tools/scripts/online-smoke.ts"
   },
   "devDependencies": {
     "@babel/core": "^7.29.7",
