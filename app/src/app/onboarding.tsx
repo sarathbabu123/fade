@@ -23,6 +23,7 @@ import { GlowButton } from '@/components/GlowButton';
 import { MiniBoard } from '@/components/MiniBoard';
 import type { Cell } from '@/components/MiniBoard';
 import { Wordmark } from '@/components/Wordmark';
+import { saveProfile } from '@/lib/account';
 import { useReduceMotion } from '@/lib/motion';
 import { haptic, USERNAME_RE, useSettings } from '@/lib/settings';
 import type { AvatarId } from '@/lib/settings';
@@ -79,7 +80,7 @@ function Dot({ i, x, w }: { i: number; x: SharedValue<number>; w: number }) {
   return <Animated.View style={[styles.dot, style]} />;
 }
 
-function ProfileSetup({ onDone }: { onDone: (name: string, avatar: AvatarId) => void }) {
+function ProfileSetup({ onDone, error, busy }: { onDone: (name: string, avatar: AvatarId) => void; error: string | null; busy: boolean }) {
   const saved = useSettings();
   const [name, setName] = useState(saved.username ?? '');
   const [avatar, setAvatar] = useState<AvatarId>(saved.avatar);
@@ -133,7 +134,8 @@ function ProfileSetup({ onDone }: { onDone: (name: string, avatar: AvatarId) => 
           />
         ))}
       </View>
-      <GlowButton title="Let's play" variant="coral" disabled={!valid} onPress={() => onDone(name, avatar)} />
+      {error ? <Text style={[type.label, styles.center, { color: colors.alarm }]}>{error}</Text> : null}
+      <GlowButton title={busy ? 'Saving…' : "Let's play"} variant="coral" disabled={!valid || busy} onPress={() => onDone(name, avatar)} />
     </View>
   );
 }
@@ -152,9 +154,23 @@ export default function Onboarding() {
     x.value = e.contentOffset.x;
   });
 
-  const finish = (username: string, avatar: AvatarId) => {
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+
+  const finish = async (username: string, avatar: AvatarId) => {
+    setBusy(true);
+    setSaveError(null);
+    set({ username, avatar, profileSynced: false });
+    // Claim the name online now if we can; offline is fine, it syncs later.
+    const r = await saveProfile();
+    setBusy(false);
+    if (!r.ok && r.reason === 'taken') {
+      setSaveError(r.message);
+      haptic.medium();
+      return;
+    }
     haptic.success();
-    set({ username, avatar, onboarded: true });
+    set({ onboarded: true });
     if (edit) router.back();
     else router.replace('/');
   };
@@ -189,7 +205,7 @@ export default function Onboarding() {
           </View>
         ))}
         <View style={[styles.page, { width }]}>
-          <ProfileSetup onDone={finish} />
+          <ProfileSetup onDone={(n, a) => void finish(n, a)} error={saveError} busy={busy} />
         </View>
       </Animated.ScrollView>
       <View style={styles.dots}>

@@ -24,6 +24,10 @@ interface SettingsState {
   timeControl: 'rapid' | 'blitz';
   rated: boolean;
   botLevel: 'easy' | 'medium' | 'hard' | 'impossible';
+  /** Supabase user id once signed in (anonymous). */
+  userId: string | null;
+  /** False when username/avatar changed and the server profile is out of date. */
+  profileSynced: boolean;
   set: (patch: Partial<Omit<SettingsState, 'set'>>) => void;
 }
 
@@ -39,6 +43,8 @@ export const useSettings = create<SettingsState>()(
       timeControl: 'rapid',
       rated: true,
       botLevel: 'medium',
+      userId: null,
+      profileSynced: false,
       set: (patch) => set(patch),
     }),
     {

@@ -10,6 +10,7 @@ import { StyleSheet, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import { AuroraBackground } from '@/components/AuroraBackground';
+import { useAccount } from '@/lib/account';
 import { useSettingsHydrated } from '@/lib/settings';
 import { colors } from '@/theme';
 
@@ -27,6 +28,8 @@ export default function RootLayout() {
     SpaceGrotesk_700Bold,
   });
   const hydrated = useSettingsHydrated();
+  // Anonymous sign-in, profile sync and presence heartbeat run in the background.
+  useAccount();
   const ready = fontsLoaded && hydrated;
 
   useEffect(() => {
