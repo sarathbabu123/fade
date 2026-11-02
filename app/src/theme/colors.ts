@@ -29,7 +29,8 @@ export const colors = {
 
   /** Aurora blobs behind every screen. */
   aurora: ['#3A1C8C', '#0D5C8C', '#7A1F63', '#14496B'] as const,
-  grid: 'rgba(196, 210, 255, 0.7)',
+  // 8-digit hex (alpha 0.7) so withAlpha() can re-tint it.
+  grid: '#C4D2FFB3',
 } as const;
 
 /** Avatar palette: 8 neon colours. */

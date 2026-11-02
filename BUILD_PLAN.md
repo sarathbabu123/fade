@@ -44,8 +44,8 @@ Each step uses the matching phase below, trimmed to the v1 scope. ⏸ marks a ch
    - 3×3 is required (the bot needs it). Time-box 4×4 and give partial or sampled numbers if it's slow.
    - Tests must cover: the 4th mark is removed before the win check; you can't play on your own about-to-fade cell.
    - ⏸ **Show REPORT.md**, then ask Sarath which board size to use. If 4×4 wins, discuss how the bot works without a full table.
-2. [ ] **Phase 1 (lite): app shell + Neon Ink theme.** Expo app, theme, core components, aurora background, Home/Onboarding/Profile/Settings layouts. ⏸ **Expo Go QR + screenshots** for Sarath.
-3. [ ] **Phase 2 (lite): offline game.**
+2. [x] **Phase 1 (lite): app shell + Neon Ink theme.** Done 2026-11-02; checked on the emulator. Expo app, theme, core components, aurora background, Home/Onboarding/Profile/Settings layouts. ⏸ **Expo Go QR + screenshots** for Sarath.
+3. [x] **Phase 2 (lite): offline game.** Done 2026-11-02. A full best-of-5 in pass & play and a bot match (Impossible) run on the emulator. Emulator frame times are poor (50–90 ms); real-phone performance still to be measured.
    - Skia board and match controller.
    - Core animations: placement strokes, next-to-fade pulse, particle fade, clock ring, timeout, win beam, result takeover.
    - Sounds, haptics, bot (4 levels), pass & play.
