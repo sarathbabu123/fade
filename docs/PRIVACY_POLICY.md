@@ -90,3 +90,4 @@ We may update this Privacy Policy from time to time. Any changes will be reflect
 If you have any questions or concerns regarding this Privacy Policy, please contact us:
 * **Email:** `support@fade.game`
 * **Repository:** [https://github.com/sarathbabu123/fade](https://github.com/sarathbabu123/fade)
+

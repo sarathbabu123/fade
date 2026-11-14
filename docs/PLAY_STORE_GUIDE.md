@@ -121,3 +121,4 @@ Once 14 days have elapsed and 20 testers have tested the build:
 2. Complete the short production application.
 3. Promote your tested build from Closed Testing directly to **Production**.
 4. Google will review and publish your app to the public Play Store within 3–7 business days!
+

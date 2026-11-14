@@ -89,3 +89,4 @@ Conducted against live Supabase production infrastructure in Frankfurt (`eu-cent
   * Haptic feedback (`expo-haptics`) triggering correctly on touches and countdowns.
   * 60/120 Hz render smoothness on Skia rating graph and game board.
   * Verification of transition easing (spring bounce completely removed).
+

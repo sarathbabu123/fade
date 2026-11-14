@@ -4,6 +4,7 @@ export * from './round.ts';
 export * from './match.ts';
 export * from './table.ts';
 export * from './bot.ts';
+export * from './sos/index.ts';
 
 import type { MatchState } from './match.ts';
 

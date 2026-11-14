@@ -17,7 +17,7 @@ import { Screen } from '@/components/Screen';
 import { Wordmark } from '@/components/Wordmark';
 import { useSettings } from '@/lib/settings';
 import { supabase } from '@/lib/supabase';
-import { colors, radii, spacing, type } from '@/theme';
+import { colors, fonts, radii, spacing, type, withAlpha } from '@/theme';
 
 // Built with the real engine: X holds 0, 4, 5 with 0 next to fade; O holds 2, 6.
 // (Phase 2 swaps this for a live bot-vs-bot demo.)
@@ -30,7 +30,9 @@ export default function PlayScreen() {
   const avatar = useSettings((s) => s.avatar);
   const username = useSettings((s) => s.username);
   const me = useSettings((s) => s.userId);
-  const [sheet, setSheet] = useState<'tc' | 'bot' | null>(null);
+  const [sheet, setSheet] = useState<'tc' | 'bot' | 'sos-bot' | null>(null);
+  const [gameType, setGameType] = useState<'fade' | 'sos'>('fade');
+  const [sosSize, setSosSize] = useState<'4' | '5'>('5');
   const tc = useSettings((s) => s.timeControl);
   const rated = useSettings((s) => (s.rated ? 'rated' : 'casual'));
   const botLevel = useSettings((s) => s.botLevel);
@@ -58,52 +60,102 @@ export default function PlayScreen() {
         </Pressable>
       </View>
 
-      <GlassCard style={styles.hero}>
-        <View style={styles.heroText}>
-          <Text style={type.caption}>HEY {username?.toUpperCase() ?? 'PLAYER'}</Text>
-          <Text style={[type.heading, styles.tagline]}>Your oldest mark fades.{'\n'}Three in a row wins.</Text>
-          <View style={styles.chips}>
-            <RatingChip
-              label={tc === 'rapid' ? 'Rapid' : 'Blitz'}
-              rating={ratingQuery.data?.rating ?? 1200}
-              provisional={(ratingQuery.data?.games ?? 0) < 10}
-            />
-          </View>
-        </View>
-        <MiniBoard cells={HERO} fading={HERO_FADING} size={112} />
-      </GlassCard>
+      {/* Game Type Switcher */}
+      <View style={styles.gameSwitcher}>
+        <Pressable
+          style={[styles.switcherTab, gameType === 'fade' && styles.switcherTabActive]}
+          onPress={() => setGameType('fade')}>
+          <Text style={[styles.switcherText, gameType === 'fade' && styles.switcherTextActive]}>FADE (Classic)</Text>
+        </Pressable>
+        <Pressable
+          style={[styles.switcherTab, gameType === 'sos' && styles.switcherTabActive]}
+          onPress={() => setGameType('sos')}>
+          <Text style={[styles.switcherText, gameType === 'sos' && styles.switcherTextActive]}>SOS DUEL (New)</Text>
+        </Pressable>
+      </View>
 
-      <Pressable style={styles.tcPill} onPress={() => setSheet('tc')} accessibilityLabel="Change time control">
-        <View style={[styles.dot, { backgroundColor: tc === 'rapid' ? colors.o : colors.x }]} />
-        <Text style={type.label}>
-          {tc === 'rapid' ? 'Rapid · 8 s' : 'Blitz · 3 s'}
-          <Text style={styles.tcDim}>  ·  {rated === 'rated' ? 'Rated' : 'Casual'}</Text>
-        </Text>
-        <Text style={styles.tcChange}>Change</Text>
-      </Pressable>
+      {gameType === 'fade' ? (
+        <>
+          <GlassCard style={styles.hero}>
+            <View style={styles.heroText}>
+              <Text style={type.caption}>HEY {username?.toUpperCase() ?? 'PLAYER'}</Text>
+              <Text style={[type.heading, styles.tagline]}>Your oldest mark fades.{'\n'}Three in a row wins.</Text>
+              <View style={styles.chips}>
+                <RatingChip
+                  label={tc === 'rapid' ? 'Rapid' : 'Blitz'}
+                  rating={ratingQuery.data?.rating ?? 1200}
+                  provisional={(ratingQuery.data?.games ?? 0) < 10}
+                />
+              </View>
+            </View>
+            <MiniBoard cells={HERO} fading={HERO_FADING} size={112} />
+          </GlassCard>
 
-      <GlowButton
-        title="Challenge a friend"
-        subtitle="Send a code on WhatsApp"
-        icon={<SwordsIcon color={colors.onAccent} />}
-        variant="coral"
-        onPress={() => router.push('/challenge')}
-      />
-      <GlowButton title="Enter a code" icon={<KeyIcon />} variant="glass" size="md" onPress={() => router.push('/join')} />
-      <GlowButton
-        title="Play the bot"
-        subtitle="Easy, Medium, Hard, Impossible"
-        icon={<BotIcon color={colors.onAccent} />}
-        variant="cyan"
-        onPress={() => setSheet('bot')}
-      />
-      <GlowButton
-        title="Pass & Play"
-        subtitle="Two players, one phone"
-        icon={<PassIcon />}
-        variant="glass"
-        onPress={() => router.push({ pathname: '/match', params: { mode: 'pass', tc } })}
-      />
+          <Pressable style={styles.tcPill} onPress={() => setSheet('tc')} accessibilityLabel="Change time control">
+            <View style={[styles.dot, { backgroundColor: tc === 'rapid' ? colors.o : colors.x }]} />
+            <Text style={type.label}>
+              {tc === 'rapid' ? 'Rapid · 8 s' : 'Blitz · 3 s'}
+              <Text style={styles.tcDim}>  ·  {rated === 'rated' ? 'Rated' : 'Casual'}</Text>
+            </Text>
+            <Text style={styles.tcChange}>Change</Text>
+          </Pressable>
+
+          <GlowButton
+            title="Challenge a friend"
+            subtitle="Send a code on WhatsApp"
+            icon={<SwordsIcon color={colors.onAccent} />}
+            variant="coral"
+            onPress={() => router.push('/challenge')}
+          />
+          <GlowButton title="Enter a code" icon={<KeyIcon />} variant="glass" size="md" onPress={() => router.push('/join')} />
+          <GlowButton
+            title="Play the bot"
+            subtitle="Easy, Medium, Hard, Impossible"
+            icon={<BotIcon color={colors.onAccent} />}
+            variant="cyan"
+            onPress={() => setSheet('bot')}
+          />
+          <GlowButton
+            title="Pass & Play"
+            subtitle="Two players, one phone"
+            icon={<PassIcon />}
+            variant="glass"
+            onPress={() => router.push({ pathname: '/match', params: { mode: 'pass', tc } })}
+          />
+        </>
+      ) : (
+        <>
+          <GlassCard style={styles.hero}>
+            <View style={styles.heroText}>
+              <Text style={type.caption}>SOS GRID DUEL</Text>
+              <Text style={[type.heading, styles.tagline]}>Complete S-O-S in any line.{'\n'}Score and earn extra turns.</Text>
+            </View>
+          </GlassCard>
+
+          <GlowButton
+            title="Play SOS Bot"
+            subtitle="Test tactics against the AI"
+            icon={<BotIcon color={colors.onAccent} />}
+            variant="cyan"
+            onPress={() => setSheet('sos-bot')}
+          />
+          <GlowButton
+            title="Pass & Play SOS (5×5)"
+            subtitle="Full tactical 25-cell board"
+            icon={<PassIcon />}
+            variant="coral"
+            onPress={() => router.push({ pathname: '/sos/match' as any, params: { mode: 'pass', size: '5' } })}
+          />
+          <GlowButton
+            title="Pass & Play SOS (4×4)"
+            subtitle="Fast 16-cell lightning match"
+            icon={<PassIcon />}
+            variant="glass"
+            size="md"
+            onPress={() => router.push({ pathname: '/sos/match' as any, params: { mode: 'pass', size: '4' } })}
+          />
+        </>
+      )}
 
       <BottomSheet visible={sheet === 'tc'} onClose={() => setSheet(null)} title="Time control">
         <Segmented
@@ -159,12 +211,72 @@ export default function PlayScreen() {
           }}
         />
       </BottomSheet>
+      <BottomSheet visible={sheet === 'sos-bot'} onClose={() => setSheet(null)} title="Play SOS Bot">
+        <Segmented
+          value={botLevel}
+          onChange={(v) => set({ botLevel: v })}
+          accent={colors.cyan}
+          options={[
+            { value: 'easy', label: 'Easy' },
+            { value: 'medium', label: 'Med' },
+            { value: 'hard', label: 'Hard' },
+          ]}
+        />
+        <Segmented
+          value={sosSize}
+          onChange={(v) => setSosSize(v as '4' | '5')}
+          accent={colors.gold}
+          options={[
+            { value: '5', label: '5×5 Grid', hint: '25 CELLS' },
+            { value: '4', label: '4×4 Grid', hint: '16 CELLS' },
+          ]}
+        />
+        <GlowButton
+          title="Start SOS Match"
+          variant="cyan"
+          size="md"
+          onPress={() => {
+            const lvl = botLevel === 'impossible' ? 'hard' : botLevel;
+            setSheet(null);
+            router.push({ pathname: '/sos/match' as any, params: { mode: 'bot', level: lvl, size: sosSize } });
+          }}
+        />
+      </BottomSheet>
     </Screen>
   );
 }
 
 const styles = StyleSheet.create({
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  gameSwitcher: {
+    flexDirection: 'row',
+    backgroundColor: withAlpha(colors.nightDeep, 0.9),
+    borderRadius: radii.pill,
+    padding: 4,
+    borderWidth: 1,
+    borderColor: colors.hairline,
+    gap: 4,
+  },
+  switcherTab: {
+    flex: 1,
+    paddingVertical: spacing.sm,
+    borderRadius: radii.pill,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  switcherTabActive: {
+    backgroundColor: withAlpha(colors.glassStrong, 0.8),
+    borderWidth: 1,
+    borderColor: withAlpha(colors.o, 0.4),
+  },
+  switcherText: {
+    ...type.caption,
+    color: colors.textDim,
+  },
+  switcherTextActive: {
+    color: colors.text,
+    fontFamily: fonts.displayHeavy,
+  },
   hero: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
   heroText: { flex: 1, gap: spacing.sm },
   tagline: { lineHeight: 24 },

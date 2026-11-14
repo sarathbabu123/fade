@@ -40,3 +40,4 @@ FADE is provided on an "AS IS" and "AS AVAILABLE" basis without warranties of an
 For legal inquiries or dispute resolution:
 * **Email:** `support@fade.game`
 * **Repository:** [https://github.com/sarathbabu123/fade](https://github.com/sarathbabu123/fade)
+
