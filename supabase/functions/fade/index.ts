@@ -468,6 +468,12 @@ async function handle(uid: string, body: Body) {
       return { match, rematchId: match.rematch_id ?? made.row?.id ?? null };
     }
 
+    case 'delete-account': {
+      const { error } = await admin.auth.admin.deleteUser(uid);
+      if (error) throw new HttpError(500, error.message);
+      return { ok: true, deleted: true };
+    }
+
     default:
       throw new HttpError(400, 'unknown action');
   }

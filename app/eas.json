@@ -14,6 +14,16 @@
         "EXPO_PUBLIC_SUPABASE_URL": "https://odluhnpdoehiccblvajm.supabase.co",
         "EXPO_PUBLIC_SUPABASE_KEY": "sb_publishable_lNE6mRU4x1MVPFynuiZjVQ_dKaqeyhH"
       }
+    },
+    "production": {
+      "android": {
+        "buildType": "app-bundle",
+        "credentialsSource": "local"
+      },
+      "env": {
+        "EXPO_PUBLIC_SUPABASE_URL": "https://odluhnpdoehiccblvajm.supabase.co",
+        "EXPO_PUBLIC_SUPABASE_KEY": "sb_publishable_lNE6mRU4x1MVPFynuiZjVQ_dKaqeyhH"
+      }
     }
   }
 }
