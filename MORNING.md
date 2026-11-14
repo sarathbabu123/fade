@@ -13,8 +13,22 @@ This is the hand-off note from the overnight build. I update it after every step
 - [x] Step 8: APK installed on connected phone (POCO X3) and tested live
 
 ## APK
-- Link: _(added when the final build is uploaded)_
-- WhatsApp text: _(added at the end)_
+- Direct download: https://github.com/sarathbabu123/fade/releases/latest/download/fade.apk
+- GitHub Release: https://github.com/sarathbabu123/fade/releases/tag/v1.0.0
+- Expo build artifact: https://expo.dev/artifacts/eas/tKF3Di8PbBGjtHqYK-ErNRRWSeoHb7evr9BaupfS2AM.apk
+
+## WhatsApp share template
+```
+⚡ Sarath challenged you to FADE!
+Tic-tac-toe where your oldest mark fades. Rapid, 8 s a move.
+
+Your code: *<code>*
+
+1. Get the app (Android): https://github.com/sarathbabu123/fade/releases/latest/download/fade.apk
+2. Open FADE → Enter a code → <code>
+
+The code works for 10 minutes.
+```
 
 ## Decisions I made overnight (please review)
 All are logged in `BUILD_PLAN.md` → "v1 scope decisions", marked "decided overnight".

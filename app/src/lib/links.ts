@@ -2,8 +2,8 @@ import { Linking, Share } from 'react-native';
 
 const supabaseUrl = (process.env.EXPO_PUBLIC_SUPABASE_URL ?? '').replace(/\/+$/, '');
 
-/** Permanent download link for the latest APK (public Supabase Storage bucket). */
-export const APK_URL = `${supabaseUrl}/storage/v1/object/public/apk/fade.apk`;
+/** Permanent direct download link for the latest APK (public GitHub Release CDN). */
+export const APK_URL = 'https://github.com/sarathbabu123/fade/releases/latest/download/fade.apk';
 
 export function challengeMessage(code: string, from: string | null, timeControl: 'rapid' | 'blitz'): string {
   const clock = timeControl === 'blitz' ? 'Blitz, 3 s a move' : 'Rapid, 8 s a move';
