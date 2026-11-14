@@ -5,6 +5,8 @@ export const colors = {
 
   x: '#FF5A5F',
   o: '#3DE0FF',
+  coral: '#FF5A5F',
+  cyan: '#3DE0FF',
   /** Second stops for X / O gradients. */
   xHot: '#FF8A4C',
   oHot: '#5B8CFF',

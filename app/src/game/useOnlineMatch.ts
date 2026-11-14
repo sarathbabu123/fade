@@ -86,7 +86,9 @@ export function useOnlineMatch(matchId: string): MatchController & { online: Onl
     let alive = true;
     void callFade<{ match: MatchRow }>('tick', { matchId })
       .then((r) => alive && accept(r.match))
-      .catch((e: Error) => alive && setError(e.message));
+      .catch(() => {
+        // Initial sync tick failure is not fatal — realtime and polling will sync.
+      });
     const channel = supabase
       .channel(`match-${matchId}`)
       .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'matches', filter: `id=eq.${matchId}` }, (payload) =>
@@ -180,7 +182,11 @@ export function useOnlineMatch(matchId: string): MatchController & { online: Onl
         .then((res) => accept(res.match))
         .catch((e: GameServerError) => {
           setOptimistic(null);
-          setError(e.status === 0 ? e.message : 'Too slow: that move missed the clock');
+          if (e.status === 409) {
+            setError('Too slow: move missed the clock');
+          } else if (e.status === 0) {
+            setError('Connection hiccup — syncing...');
+          }
           playSound('error');
           void callFade<{ match: MatchRow }>('tick', { matchId }).then((res) => accept(res.match)).catch(() => {});
         });
@@ -193,7 +199,9 @@ export function useOnlineMatch(matchId: string): MatchController & { online: Onl
     (tap: RaceTap) => {
       void callFade<{ match: MatchRow }>('race-tap', { matchId, tap })
         .then((r) => accept(r.match))
-        .catch((e: Error) => setError(e.message));
+        .catch(() => {
+          // Benign race conditions (race already decided / started) do not need an error banner
+        });
     },
     [matchId, accept],
   );
@@ -201,14 +209,16 @@ export function useOnlineMatch(matchId: string): MatchController & { online: Onl
   const resign = useCallback(() => {
     void callFade<{ match: MatchRow }>('resign', { matchId })
       .then((r) => accept(r.match))
-      .catch((e: Error) => setError(e.message));
+      .catch(() => {});
   }, [matchId, accept]);
 
   const rematch = useCallback(() => {
     setRematchRequested(true);
     void callFade<{ match: MatchRow; rematchId: string | null }>('rematch', { matchId })
       .then((r) => accept(r.match))
-      .catch((e: Error) => setError(e.message));
+      .catch(() => {
+        setError('Could not request rematch. Try again.');
+      });
   }, [matchId, accept]);
 
   let phase: MatchPhase = 'race';

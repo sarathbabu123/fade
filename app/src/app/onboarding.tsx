@@ -134,7 +134,7 @@ function ProfileSetup({ onDone, error, busy }: { onDone: (name: string, avatar: 
           />
         ))}
       </View>
-      {error ? <Text style={[type.label, styles.center, { color: colors.alarm }]}>{error}</Text> : null}
+      {error ? <Text style={[type.label, styles.center, { color: colors.coral }]}>{error}</Text> : null}
       <GlowButton title={busy ? 'Saving…' : "Let's play"} variant="coral" disabled={!valid || busy} onPress={() => onDone(name, avatar)} />
     </View>
   );

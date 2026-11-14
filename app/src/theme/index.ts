@@ -44,12 +44,12 @@ export function glow(color: string, radius = 18, strength = 0.55): string {
 }
 
 export const motion = {
-  press: { scale: 0.96 },
-  spring: { damping: 15, stiffness: 260, mass: 0.7 },
-  springSoft: { damping: 18, stiffness: 140 },
+  press: { scale: 0.97 },
+  spring: { damping: 28, stiffness: 220, mass: 1 },
+  springSoft: { damping: 26, stiffness: 180 },
   /** Grid lines breathe 0.6 ↔ 0.8 over 4 s. */
   breatheMs: 4000,
   /** Next-to-fade pulse at ~1.2 Hz. */
   fadePulseMs: 420,
-  screenSlide: 12,
+  screenSlide: 8,
 } as const;

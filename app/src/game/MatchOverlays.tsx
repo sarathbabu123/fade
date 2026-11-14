@@ -29,7 +29,7 @@ const colorOf = (p: Player | null) => (p === 'X' ? colors.x : p === 'O' ? colors
 /** "ROUND 2" at a round's start, or the round's result at its end. */
 export function RoundBanner({ text, sub, color }: { text: string; sub?: string; color: string }) {
   return (
-    <Animated.View entering={ZoomIn.springify().damping(14)} exiting={FadeOut.duration(200)} style={styles.bannerWrap} pointerEvents="none">
+    <Animated.View entering={ZoomIn.duration(220).easing(Easing.out(Easing.quad))} exiting={FadeOut.duration(200)} style={styles.bannerWrap} pointerEvents="none">
       <View style={[styles.banner, { borderColor: withAlpha(color, 0.6), boxShadow: glow(color, 28, 0.35) }]}>
         <Text style={[styles.bannerText, { color, textShadowColor: color }]}>{text}</Text>
         {sub ? <Text style={type.bodyDim}>{sub}</Text> : null}
@@ -41,7 +41,7 @@ export function RoundBanner({ text, sub, color }: { text: string; sub?: string; 
 /** "TIME" slams in and fades when a player times out. */
 export function TimeStamp({ color }: { color: string }) {
   return (
-    <Animated.View entering={ZoomIn.springify().damping(8).stiffness(400)} exiting={FadeOut.duration(300)} style={styles.stampWrap} pointerEvents="none">
+    <Animated.View entering={ZoomIn.duration(180).easing(Easing.out(Easing.quad))} exiting={FadeOut.duration(300)} style={styles.stampWrap} pointerEvents="none">
       <Text style={[styles.stamp, { color, borderColor: color, textShadowColor: color }]}>TIME</Text>
     </Animated.View>
   );
@@ -152,7 +152,7 @@ export function MatchResult({ outcome, title, winner, score, reason, onRematch, 
       {celebrate && !reduce && <Confetti width={width} height={height} />}
       <View style={styles.resultBody}>
         {celebrate && (
-          <Animated.View entering={reduce ? FadeIn : SlideInUp.springify().damping(9).mass(0.8)}>
+          <Animated.View entering={reduce ? FadeIn : SlideInUp.duration(280).easing(Easing.out(Easing.quad))}>
             <Crown color={colors.gold} />
           </Animated.View>
         )}
@@ -199,10 +199,13 @@ const styles = StyleSheet.create({
   sudden: {
     width: '100%',
     paddingVertical: spacing.md,
-    backgroundColor: withAlpha(colors.alarm, 0.85),
+    backgroundColor: withAlpha(colors.coral, 0.22),
+    borderTopWidth: 1,
+    borderBottomWidth: 1,
+    borderColor: withAlpha(colors.coral, 0.6),
     alignItems: 'center',
   },
-  suddenText: { fontFamily: fonts.displayHeavy, fontSize: 24, letterSpacing: 4, color: colors.text },
+  suddenText: { fontFamily: fonts.displayHeavy, fontSize: 24, letterSpacing: 4, color: colors.coral },
   result: { backgroundColor: withAlpha(colors.nightDeep, 0.92), zIndex: 30, justifyContent: 'center' },
   resultBody: { alignItems: 'center', gap: spacing.lg, paddingHorizontal: spacing.xl },
   resultTitle: { fontFamily: fonts.displayHeavy, fontSize: 34, letterSpacing: 1.5, textShadowRadius: 18, textAlign: 'center' },

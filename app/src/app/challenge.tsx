@@ -1,7 +1,7 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import { Pressable, Share, StyleSheet, Text, View } from 'react-native';
-import Animated, { Easing, useAnimatedStyle, useSharedValue, withRepeat, withTiming, ZoomIn } from 'react-native-reanimated';
+import Animated, { Easing, FadeIn, useAnimatedStyle, useSharedValue, withRepeat, withTiming } from 'react-native-reanimated';
 
 import { GlassCard } from '@/components/GlassCard';
 import { GlowButton } from '@/components/GlowButton';
@@ -103,7 +103,7 @@ export default function ChallengeScreen() {
       <GlassCard glowColor={colors.x} style={styles.codeCard}>
         <Text style={type.caption}>{tc === 'blitz' ? 'BLITZ · 3 S A MOVE' : 'RAPID · 8 S A MOVE'}</Text>
         {code ? (
-          <Animated.View entering={ZoomIn.springify().damping(12)} style={styles.codeRow} accessible accessibilityLabel={`Code ${code.split('').join(' ')}`}>
+          <Animated.View entering={FadeIn.duration(200)} style={styles.codeRow} accessible accessibilityLabel={`Code ${code.split('').join(' ')}`}>
             {code.split('').map((ch, i) => (
               <View key={i} style={styles.letter}>
                 <Text style={styles.letterText}>{ch}</Text>
@@ -111,7 +111,7 @@ export default function ChallengeScreen() {
             ))}
           </Animated.View>
         ) : error ? (
-          <Text style={[type.label, { color: colors.alarm }]}>{error}</Text>
+          <Text style={[type.label, { color: colors.coral }]}>{error}</Text>
         ) : (
           <Text style={type.bodyDim}>Making your code…</Text>
         )}

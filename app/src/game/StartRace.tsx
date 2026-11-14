@@ -2,7 +2,7 @@ import { botReactionMs, resolveStartRace, START_RACE } from '@fade/engine';
 import type { BotLevel, Player, RaceTap } from '@fade/engine';
 import { useEffect, useRef, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import Animated, { FadeIn, FadeOut, ZoomIn } from 'react-native-reanimated';
+import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 
 import { haptic } from '@/lib/settings';
 import { colors, fonts, spacing, type, withAlpha } from '@/theme';
@@ -86,11 +86,11 @@ export function StartRace({ mode, botLevel, names, onResolved }: Props) {
   const labelColor = stage === 'go' ? colors.gold : stage === 'result' ? (starter === 'X' ? colors.x : colors.o) : colors.text;
 
   const center = (
-    <Animated.View key={stage} entering={ZoomIn.springify().damping(12)} style={styles.center} pointerEvents="none">
+    <Animated.View key={stage} entering={FadeIn.duration(180)} style={styles.center} pointerEvents="none">
       <Text style={[styles.big, { color: labelColor, textShadowColor: labelColor }]}>{label}</Text>
       {stage !== 'result' && <Text style={type.bodyDim}>{mode === 'bot' ? 'Tap first after GO to move first' : 'Fastest tap after GO moves first'}</Text>}
       {falseStart && stage !== 'result' && (
-        <Text style={[type.label, { color: colors.alarm }]}>False start: {names[falseStart]}!</Text>
+        <Text style={[type.label, { color: colors.coral }]}>False start: {names[falseStart]}!</Text>
       )}
     </Animated.View>
   );
@@ -190,9 +190,9 @@ export function OnlineStartRace({ goAtLocal, names, me, starter, onTap }: Online
     <Animated.View entering={FadeIn} exiting={FadeOut} style={[StyleSheet.absoluteFill, styles.root]}>
       <Pressable style={StyleSheet.absoluteFill} onPressIn={tap} accessibilityLabel="Tap after GO" />
       <View style={StyleSheet.absoluteFill} pointerEvents="none">
-        <Animated.View key={stage} entering={ZoomIn.springify().damping(12)} style={styles.center}>
+        <Animated.View key={stage} entering={FadeIn.duration(180)} style={styles.center}>
           <Text style={[styles.big, { color: labelColor, textShadowColor: labelColor }]}>{label}</Text>
-          {hint ? <Text style={[type.bodyDim, mine?.kind === 'falseStart' && { color: colors.alarm }]}>{hint}</Text> : null}
+          {hint ? <Text style={[type.bodyDim, mine?.kind === 'falseStart' && { color: colors.coral }]}>{hint}</Text> : null}
         </Animated.View>
       </View>
     </Animated.View>

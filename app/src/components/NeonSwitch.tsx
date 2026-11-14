@@ -1,9 +1,9 @@
 import { useEffect } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import Animated, { interpolateColor, useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
+import Animated, { interpolateColor, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 
 import { haptic } from '@/lib/settings';
-import { colors, glow, motion, radii, spacing, type, withAlpha } from '@/theme';
+import { colors, glow, radii, spacing, type, withAlpha } from '@/theme';
 
 interface SwitchProps {
   value: boolean;
@@ -15,7 +15,7 @@ interface SwitchProps {
 export function NeonSwitch({ value, onChange, accent = colors.o, label }: SwitchProps) {
   const t = useSharedValue(value ? 1 : 0);
   useEffect(() => {
-    t.value = withSpring(value ? 1 : 0, motion.spring);
+    t.value = withTiming(value ? 1 : 0, { duration: 160 });
   }, [value, t]);
   const track = useAnimatedStyle(() => ({
     backgroundColor: interpolateColor(t.value, [0, 1], [colors.glassStrong, withAlpha(accent, 0.35)]),

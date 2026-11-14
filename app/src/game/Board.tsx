@@ -47,7 +47,7 @@ function Mark({ mark, cs, n, pulse, fading, reduce }: { mark: VisualMark; cs: nu
   useEffect(() => {
     if (reduce) return;
     draw.value = withTiming(1, { duration: mark.player === 'X' ? 240 : 220, easing: Easing.out(Easing.quad) });
-    pop.value = withSpring(1, { damping: 9, stiffness: 320 });
+    pop.value = withTiming(1, { duration: 160, easing: Easing.out(Easing.quad) });
   }, [draw, pop, mark.player, reduce]);
 
   const [a, b] = useMemo(() => {

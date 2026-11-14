@@ -1,7 +1,7 @@
 import { router } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import Animated, { SlideInUp, SlideOutUp } from 'react-native-reanimated';
+import Animated, { Easing, SlideInUp, SlideOutUp } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { playSound } from '@/game/sounds';
@@ -68,7 +68,7 @@ export function IncomingChallenge() {
   };
 
   return (
-    <Animated.View entering={SlideInUp.springify().damping(14)} exiting={SlideOutUp} style={[styles.wrap, { top: insets.top + spacing.sm }]}>
+    <Animated.View entering={SlideInUp.duration(240).easing(Easing.out(Easing.quad))} exiting={SlideOutUp} style={[styles.wrap, { top: insets.top + spacing.sm }]}>
       <View style={styles.card}>
         <Text style={type.label} numberOfLines={1}>
           ⚔️ {incoming.fromName} challenged you

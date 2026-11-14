@@ -1,7 +1,7 @@
 import { memo, useEffect } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import type { TextStyle } from 'react-native';
-import Animated, { useAnimatedStyle, useSharedValue, withDelay, withSpring } from 'react-native-reanimated';
+import Animated, { Easing, useAnimatedStyle, useSharedValue, withDelay, withTiming } from 'react-native-reanimated';
 
 import { useReduceMotion } from '@/lib/motion';
 
@@ -12,7 +12,7 @@ function Digit({ digit, lineHeight, style, delay }: { digit: number; lineHeight:
   const y = useSharedValue(-digit * lineHeight);
   useEffect(() => {
     const to = -digit * lineHeight;
-    y.value = reduce ? to : withDelay(delay, withSpring(to, { damping: 16, stiffness: 120, mass: 0.8 }));
+    y.value = reduce ? to : withDelay(delay, withTiming(to, { duration: 240, easing: Easing.out(Easing.quad) }));
   }, [digit, lineHeight, reduce, delay, y]);
   const strip = useAnimatedStyle(() => ({ transform: [{ translateY: y.value }] }));
   return (

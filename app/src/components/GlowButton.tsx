@@ -2,7 +2,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import type { ReactNode } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import type { StyleProp, ViewStyle } from 'react-native';
-import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
+import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 
 import { haptic } from '@/lib/settings';
 import { colors, glow, motion, radii, spacing, type } from '@/theme';
@@ -42,11 +42,11 @@ export function GlowButton({ title, subtitle, icon, onPress, variant = 'coral', 
       disabled={disabled}
       onPress={onPress}
       onPressIn={() => {
-        scale.value = withSpring(motion.press.scale, motion.spring);
+        scale.value = withTiming(motion.press.scale, { duration: 70 });
         haptic.selection();
       }}
       onPressOut={() => {
-        scale.value = withSpring(1, motion.spring);
+        scale.value = withTiming(1, { duration: 110 });
       }}
       style={style}>
       <Animated.View

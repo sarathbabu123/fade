@@ -21,8 +21,8 @@ type TabButtonProps = TabTriggerSlotProps & {
 
 function TabButton({ isFocused, label, Icon, accent, ref, ...props }: TabButtonProps) {
   const pill = useAnimatedStyle(() => ({
-    opacity: withTiming(isFocused ? 1 : 0, { duration: 180 }),
-    transform: [{ scale: withSpring(isFocused ? 1 : 0.85, motion.spring) }],
+    opacity: withTiming(isFocused ? 1 : 0, { duration: 150 }),
+    transform: [{ scale: withTiming(isFocused ? 1 : 0.88, { duration: 150 }) }],
   }));
   const color = isFocused ? accent : colors.textFaint;
   return (

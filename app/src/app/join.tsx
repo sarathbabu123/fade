@@ -91,5 +91,5 @@ const styles = StyleSheet.create({
   boxActive: { borderColor: colors.o, boxShadow: glow(colors.o, 12, 0.4) },
   boxText: { fontFamily: fonts.displayHeavy, fontSize: 28, color: colors.text },
   hidden: { position: 'absolute', opacity: 0, height: 1, width: 1 },
-  error: { color: colors.alarm, textAlign: 'center' },
+  error: { color: colors.coral, textAlign: 'center' },
 });

@@ -172,3 +172,4 @@ export function rateMatch(
   const newB = updateRating(playerB, [{ opponent: playerA, score: 1 - scoreA }], options);
   return [newA, newB];
 }
+

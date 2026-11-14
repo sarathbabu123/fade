@@ -27,7 +27,7 @@ export function BottomSheet({ visible, onClose, title, children }: Props) {
   useEffect(() => {
     if (visible) {
       setMounted(true);
-      y.value = withSpring(0, { damping: 20, stiffness: 220 });
+      y.value = withTiming(0, { duration: 240, easing: Easing.out(Easing.cubic) });
       backdrop.value = withTiming(1, { duration: 220 });
     } else if (mounted) {
       backdrop.value = withTiming(0, { duration: 180 });
@@ -45,7 +45,7 @@ export function BottomSheet({ visible, onClose, title, children }: Props) {
       if (e.translationY > 110 || e.velocityY > 900) {
         scheduleOnRN(onClose);
       } else {
-        y.value = withSpring(0, { damping: 20, stiffness: 220 });
+        y.value = withTiming(0, { duration: 180, easing: Easing.out(Easing.quad) });
       }
     },
   });
