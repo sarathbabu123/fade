@@ -4,6 +4,7 @@ import type { ComponentRef } from 'react';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { GlowButton } from '@/components/GlowButton';
+import { NeonLoader } from '@/components/NeonLoader';
 import { Screen } from '@/components/Screen';
 import { ensureSignedIn, saveProfile } from '@/lib/account';
 import { haptic, useSettings } from '@/lib/settings';
@@ -69,6 +70,11 @@ export default function JoinScreen() {
         onSubmitEditing={() => code.length === 6 && void join()}
       />
       {error ? <Text style={[type.label, styles.error]}>{error}</Text> : null}
+      {busy && (
+        <View style={{ alignItems: 'center', marginVertical: spacing.md }}>
+          <NeonLoader size="sm" label="Connecting to match…" />
+        </View>
+      )}
       <GlowButton title={busy ? 'Joining…' : 'Join match'} variant="cyan" disabled={code.length !== 6 || busy} onPress={() => void join()} />
     </Screen>
   );

@@ -1,7 +1,7 @@
 import type { SosPlayer, SosState } from '@fade/engine';
 import { memo } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
+import Animated, { FadeIn, FadeOut, ZoomIn } from 'react-native-reanimated';
 
 import { colors, fonts, glow, radii, spacing, type, withAlpha } from '@/theme';
 
@@ -35,8 +35,8 @@ export const SosScoreHeader = memo(function SosScoreHeader({ state, p1Name, p2Na
       <View style={styles.middle}>
         <Text style={type.caption}>{state.config.size}×{state.config.size} SOS</Text>
         {state.lastPointsEarned > 0 && state.status === 'playing' && (
-          <Animated.View entering={FadeIn.duration(180)} exiting={FadeOut.duration(200)} style={styles.streakPill}>
-            <Text style={styles.streakText}>+{state.lastPointsEarned} SOS! BONUS TURN</Text>
+          <Animated.View key={state.ply} entering={ZoomIn.duration(200)} exiting={FadeOut.duration(200)} style={styles.streakPill}>
+            <Text style={styles.streakText}>⚡ +{state.lastPointsEarned} SOS! EXTRA TURN</Text>
           </Animated.View>
         )}
       </View>

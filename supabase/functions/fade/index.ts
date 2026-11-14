@@ -3,7 +3,9 @@
 import { createClient } from 'npm:@supabase/supabase-js@2';
 import { createRemoteJWKSet, jwtVerify } from 'npm:jose@6';
 import {
+  applySosMove,
   createMatch,
+  createSosGame,
   DEFAULT_MATCH_CONFIG,
   deserialize,
   MATCH_TIMING,
@@ -11,11 +13,12 @@ import {
   matchTimeout,
   resign,
   resolveStartRace,
+  sosTimeLimitMs,
   START_RACE,
   startNextRound,
   turnClockMs,
 } from '../_shared/engine/index.ts';
-import type { MatchState, Player, RaceTap, TimeControl } from '../_shared/engine/index.ts';
+import type { MatchState, Player, RaceTap, SosLetter, SosState, TimeControl } from '../_shared/engine/index.ts';
 import { defaultRating, rateMatch } from '../_shared/rating/index.ts';
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
@@ -54,8 +57,8 @@ interface MatchRow {
   time_control: TimeControl;
   rated: boolean;
   status: 'race' | 'active' | 'finished' | 'aborted';
-  race: { goAt?: string; taps?: Partial<Record<Player, RaceTap>>; starter?: Player };
-  state: MatchState | null;
+  race: { game?: 'fade' | 'sos'; goAt?: string; taps?: Partial<Record<Player, RaceTap>>; starter?: Player };
+  state: MatchState | SosState | null;
   turn_started_at: string | null;
   turn_ms: number | null;
   next_round_at: string | null;
@@ -98,8 +101,24 @@ async function save(m: MatchRow, patch: Partial<MatchRow>): Promise<MatchRow | n
 }
 
 /** Apply an engine state to the row: clocks, round pause and match end. */
-function withState(state: MatchState, turnStart: number): Partial<MatchRow> {
+function withState(state: MatchState | SosState, turnStart: number): Partial<MatchRow> {
   const patch: Partial<MatchRow> = { state };
+  if ('scores' in state) {
+    // SOS State
+    if (state.status === 'playing') {
+      patch.turn_started_at = iso(turnStart);
+      patch.turn_ms = sosTimeLimitMs(state.config.timeControl);
+      patch.next_round_at = null;
+    } else {
+      patch.status = 'finished';
+      patch.winner = state.winner === 'draw' ? null : state.winner;
+      patch.ended_reason = 'board_full';
+      patch.turn_started_at = null;
+      patch.next_round_at = null;
+    }
+    return patch;
+  }
+
   if (state.status === 'playing') {
     patch.turn_started_at = iso(turnStart);
     patch.turn_ms = turnClockMs(state);
@@ -238,19 +257,41 @@ function catchUp(m: MatchRow, now: number): { patch: Partial<MatchRow>; plies: [
   const plies: [MatchState, MatchState][] = [];
   let changed = false;
 
+  const isSos = m.race?.game === 'sos';
+
   if (m.status === 'race') {
     const goAt = ms(m.race.goAt ?? null);
     const taps = m.race.taps ?? {};
     const bothIn = taps.X && taps.O;
     if (!bothIn && now < goAt + START_RACE.windowMs) return null;
     const starter = resolveStartRace(taps.X ?? { kind: 'none' }, taps.O ?? { kind: 'none' }, Math.random() < 0.5 ? 'X' : 'O');
-    const state = createMatch({ ...DEFAULT_MATCH_CONFIG, timeControl: m.time_control }, starter);
+    const state = isSos
+      ? createSosGame({ size: 5, timeControl: m.time_control }, starter)
+      : createMatch({ ...DEFAULT_MATCH_CONFIG, timeControl: m.time_control }, starter);
     patch = { status: 'active', race: { ...m.race, starter }, ...withState(state, now + START_PAUSE_MS) };
     return { patch, plies };
   }
   if (m.status !== 'active' || !m.state) return null;
 
-  let state = m.state;
+  if (isSos) {
+    const s = m.state as SosState;
+    const turnStart = ms(m.turn_started_at);
+    const turnMs = m.turn_ms ?? sosTimeLimitMs(s.config.timeControl);
+    if (s.status === 'playing' && now > turnStart + turnMs + MATCH_TIMING.moveGraceMs) {
+      const opp = s.toMove === 'X' ? 'O' : 'X';
+      const timedOut: SosState = {
+        ...s,
+        toMove: opp,
+        lastScoredBy: null,
+        lastPointsEarned: 0,
+      };
+      patch = withState(timedOut, now);
+      return { patch, plies };
+    }
+    return null;
+  }
+
+  let state = m.state as MatchState;
   let turnStart = ms(m.turn_started_at);
   let turnMs = m.turn_ms ?? 0;
   let nextRound = ms(m.next_round_at);
@@ -313,15 +354,21 @@ async function mutate(id: string, fn: (m: MatchRow, now: number) => Promise<Part
   throw new HttpError(409, 'busy, try again');
 }
 
-function randomCode(): string {
+function randomCode(game: 'fade' | 'sos' = 'fade'): string {
   const bytes = crypto.getRandomValues(new Uint8Array(6));
-  return [...bytes].map((b) => CODE_LETTERS[b % CODE_LETTERS.length]).join('');
+  const rest = [...bytes.slice(1)].map((b) => CODE_LETTERS[b % CODE_LETTERS.length]).join('');
+  if (game === 'sos') {
+    return 'S' + rest;
+  }
+  const nonSLetters = CODE_LETTERS.replace('S', '');
+  const first = nonSLetters[bytes[0] % nonSLetters.length];
+  return first + rest;
 }
 
-async function newMatch(x: string, o: string, tc: TimeControl, rated = true): Promise<MatchRow> {
+async function newMatch(x: string, o: string, tc: TimeControl, rated = true, game: 'fade' | 'sos' = 'fade'): Promise<MatchRow> {
   const { data, error } = await admin
     .from('matches')
-    .insert({ player_x: x, player_o: o, time_control: tc, rated, race: { goAt: iso(Date.now() + RACE_LEAD_MS), taps: {} } })
+    .insert({ player_x: x, player_o: o, time_control: tc, rated, race: { game, goAt: iso(Date.now() + RACE_LEAD_MS), taps: {} } })
     .select('*')
     .single();
   if (error) throw new HttpError(500, error.message);
@@ -338,13 +385,14 @@ async function handle(uid: string, body: Body) {
     case 'create-challenge': {
       const tc: TimeControl = body.timeControl === 'blitz' ? 'blitz' : 'rapid';
       const rated = body.rated !== false;
+      const game: 'fade' | 'sos' = body.game === 'sos' ? 'sos' : 'fade';
       const toId = typeof body.toId === 'string' ? body.toId : null;
       // Cancel this user's older open challenges so only one code is live.
       await admin.from('challenges').update({ status: 'cancelled' }).eq('from_id', uid).eq('status', 'open');
       for (let i = 0; i < 5; i++) {
-        const code = randomCode();
+        const code = randomCode(game);
         const { error } = await admin.from('challenges').insert({ code, from_id: uid, to_id: toId, time_control: tc, rated });
-        if (!error) return { code, expiresInMs: 10 * 60 * 1000 };
+        if (!error) return { code, expiresInMs: 10 * 60 * 1000, game };
       }
       throw new HttpError(500, 'could not create a code');
     }
@@ -362,7 +410,8 @@ async function handle(uid: string, body: Body) {
       if (ch.status !== 'open') throw new HttpError(410, 'That code has already been used');
       if (Date.parse(ch.expires_at) < Date.now()) throw new HttpError(410, 'That code has expired');
       if (ch.to_id && ch.to_id !== uid) throw new HttpError(403, 'That challenge is for someone else');
-      const match = await newMatch(ch.from_id, uid, ch.time_control, ch.rated);
+      const game: 'fade' | 'sos' = code.startsWith('S') ? 'sos' : 'fade';
+      const match = await newMatch(ch.from_id, uid, ch.time_control, ch.rated, game);
       const { data: claimed } = await admin
         .from('challenges')
         .update({ status: 'accepted', match_id: match.id })
@@ -398,7 +447,10 @@ async function handle(uid: string, body: Body) {
           const race = { ...m.race, taps };
           if (taps.X && taps.O) {
             const starter = resolveStartRace(taps.X, taps.O, Math.random() < 0.5 ? 'X' : 'O');
-            const state = createMatch({ ...DEFAULT_MATCH_CONFIG, timeControl: m.time_control }, starter);
+            const isSos = race.game === 'sos';
+            const state = isSos
+              ? createSosGame({ size: 5, timeControl: m.time_control }, starter)
+              : createMatch({ ...DEFAULT_MATCH_CONFIG, timeControl: m.time_control }, starter);
             return { status: 'active', race: { ...race, starter }, ...withState(state, now + START_PAUSE_MS) };
           }
           return { race };
@@ -413,6 +465,21 @@ async function handle(uid: string, body: Body) {
       const match = await mutate(id, (m, now) => {
         const me = seatOf(m, uid);
         if (m.status !== 'active' || !m.state) throw new HttpError(409, 'match is not active');
+        if (m.race.game === 'sos') {
+          const s = m.state as SosState;
+          if (s.status !== 'playing') throw new HttpError(409, 'game is finished');
+          if (s.toMove !== me) throw new HttpError(409, 'not your turn');
+          if (body.ply !== s.ply) throw new HttpError(409, 'out of sync');
+          const letter = (body.letter === 'O' ? 'O' : 'S') as SosLetter;
+          let next: SosState;
+          try {
+            next = applySosMove(s, cell, letter);
+          } catch (e) {
+            throw new HttpError(400, (e as Error).message);
+          }
+          return withState(next, now);
+        }
+
         const s = deserialize(JSON.stringify(m.state));
         if (s.status !== 'playing') throw new HttpError(409, 'round is not in play');
         if (s.round.toMove !== me) throw new HttpError(409, 'not your turn');
@@ -445,7 +512,17 @@ async function handle(uid: string, body: Body) {
           if (m.status === 'race' || !m.state) {
             return { status: 'aborted', ended_reason: 'aborted' };
           }
-          return withState(resign(m.state, me), Date.now());
+          if (m.race.game === 'sos') {
+            const s = m.state as SosState;
+            const opp = me === 'X' ? 'O' : 'X';
+            const resignedState: SosState = {
+              ...s,
+              status: 'finished',
+              winner: opp,
+            };
+            return withState(resignedState, Date.now());
+          }
+          return withState(resign(m.state as MatchState, me), Date.now());
         }),
       };
     }
@@ -459,8 +536,8 @@ async function handle(uid: string, body: Body) {
         if (m.rematch_id) return null;
         const rematch = { ...m.rematch, [me]: true };
         if (rematch.X && rematch.O) {
-          // Swap colours for the rematch.
-          made.row = await newMatch(m.player_o, m.player_x, m.time_control, m.rated);
+          // Swap colours for the rematch and preserve game type.
+          made.row = await newMatch(m.player_o, m.player_x, m.time_control, m.rated, m.race.game ?? 'fade');
           return { rematch, rematch_id: made.row.id };
         }
         return { rematch };

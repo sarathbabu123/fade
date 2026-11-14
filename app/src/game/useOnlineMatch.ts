@@ -1,5 +1,5 @@
-import { matchMove, START_RACE } from '@fade/engine';
-import type { MatchState, Player, RaceTap } from '@fade/engine';
+import { applySosMove, matchMove, START_RACE } from '@fade/engine';
+import type { MatchState, Player, RaceTap, SosLetter, SosState } from '@fade/engine';
 import { router } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
@@ -20,8 +20,8 @@ export interface MatchRow {
   player_o: string;
   time_control: 'blitz' | 'rapid';
   status: 'race' | 'active' | 'finished' | 'aborted';
-  race: { goAt?: string; taps?: Partial<Record<Player, RaceTap>>; starter?: Player };
-  state: MatchState | null;
+  race: { game?: 'fade' | 'sos'; goAt?: string; taps?: Partial<Record<Player, RaceTap>>; starter?: Player };
+  state: MatchState | SosState | null;
   turn_started_at: string | null;
   turn_ms: number | null;
   next_round_at: string | null;
@@ -38,6 +38,10 @@ export interface OnlinePlayer {
 }
 
 export interface OnlineExtras {
+  isSos: boolean;
+  game: 'fade' | 'sos';
+  sosState: SosState | null;
+  playSos: (cell: number, letter: SosLetter) => boolean;
   /** Local-clock time of GO for the start race. */
   goAtLocal: number;
   raceTap: (tap: RaceTap) => void;
@@ -162,11 +166,44 @@ export function useOnlineMatch(matchId: string): MatchController & { online: Onl
     if (rematchId) router.replace({ pathname: '/online/[id]', params: { id: rematchId } });
   }, [rematchId]);
 
+  const isSos = row?.race?.game === 'sos';
+
+  const playSos = useCallback(
+    (cell: number, letter: SosLetter) => {
+      const r = rowRef.current;
+      const s = r?.state as SosState | null;
+      if (!r || !s || r.status !== 'active' || s.status !== 'playing' || s.toMove !== me) return false;
+      let next: SosState;
+      try {
+        next = applySosMove(s, cell, letter);
+      } catch {
+        return false;
+      }
+      if (r.turn_started_at && Date.now() < toLocalTime(Date.parse(r.turn_started_at)) - 200) return false;
+      setOptimistic(next as any);
+      setOptimisticAt(Date.now());
+      void callFade<{ match: MatchRow }>('move', { matchId, cell, letter, ply: s.ply })
+        .then((res) => accept(res.match))
+        .catch((e: GameServerError) => {
+          setOptimistic(null);
+          if (e.status === 409) {
+            setError('Too slow: move missed the clock');
+          } else if (e.status === 0) {
+            setError('Connection hiccup — syncing...');
+          }
+          playSound('error');
+          void callFade<{ match: MatchRow }>('tick', { matchId }).then((res) => accept(res.match)).catch(() => {});
+        });
+      return true;
+    },
+    [matchId, me, accept],
+  );
+
   const play = useCallback(
     (cell: number) => {
       const r = rowRef.current;
-      const s = r?.state;
-      if (!r || !s || r.status !== 'active' || s.status !== 'playing' || s.round.toMove !== me) return false;
+      const s = r?.state as MatchState | null;
+      if (!r || !s || r.status !== 'active' || s.status !== 'playing' || s.round?.toMove !== me) return false;
       let next: MatchState;
       try {
         next = matchMove(s, cell);
@@ -223,7 +260,15 @@ export function useOnlineMatch(matchId: string): MatchController & { online: Onl
 
   let phase: MatchPhase = 'race';
   if (row?.status === 'finished' || row?.status === 'aborted') phase = 'finished';
-  else if (row?.status === 'active' && state) phase = state.status === 'playing' ? 'playing' : state.status === 'roundOver' ? 'roundOver' : 'finished';
+  else if (row?.status === 'active' && state) {
+    if (isSos) {
+      const s = state as SosState;
+      phase = s.status === 'playing' ? 'playing' : 'finished';
+    } else {
+      const s = state as MatchState;
+      phase = s.status === 'playing' ? 'playing' : s.status === 'roundOver' ? 'roundOver' : 'finished';
+    }
+  }
 
   // The clock: turn start in local time. During the server's start pause it sits full.
   const turnStartedAt = optimistic ? optimisticAt : row?.turn_started_at ? toLocalTime(Date.parse(row.turn_started_at)) : 0;
@@ -231,7 +276,7 @@ export function useOnlineMatch(matchId: string): MatchController & { online: Onl
 
   return {
     kind: 'online',
-    match: row?.status === 'aborted' ? null : state,
+    match: row?.status === 'aborted' || isSos ? null : (state as MatchState),
     phase,
     me,
     turnStartedAt,
@@ -242,6 +287,10 @@ export function useOnlineMatch(matchId: string): MatchController & { online: Onl
     resign,
     rematch,
     online: {
+      isSos,
+      game: isSos ? 'sos' : 'fade',
+      sosState: isSos ? (state as SosState) : null,
+      playSos,
       goAtLocal: row?.race.goAt ? toLocalTime(Date.parse(row.race.goAt)) : Date.now() + 3000,
       raceTap,
       raceStarter: row?.status === 'race' ? null : (row?.race.starter ?? null),

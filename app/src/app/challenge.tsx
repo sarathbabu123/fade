@@ -1,36 +1,21 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import { Pressable, Share, StyleSheet, Text, View } from 'react-native';
-import Animated, { Easing, FadeIn, useAnimatedStyle, useSharedValue, withRepeat, withTiming } from 'react-native-reanimated';
+import Animated, { FadeIn } from 'react-native-reanimated';
 
 import { GlassCard } from '@/components/GlassCard';
 import { GlowButton } from '@/components/GlowButton';
+import { NeonLoader } from '@/components/NeonLoader';
 import { Screen } from '@/components/Screen';
 import { ensureSignedIn, saveProfile } from '@/lib/account';
-import { useReduceMotion } from '@/lib/motion';
 import { challengeMessage, shareOnWhatsApp } from '@/lib/links';
 import { haptic, useSettings } from '@/lib/settings';
 import { callFade, supabase } from '@/lib/supabase';
 import { colors, fonts, glow, radii, spacing, type, withAlpha } from '@/theme';
 
-/** Pulsing ring while we wait for the friend to join. */
-function Waiting() {
-  const reduce = useReduceMotion();
-  const t = useSharedValue(0);
-  useEffect(() => {
-    if (!reduce) t.value = withRepeat(withTiming(1, { duration: 1600, easing: Easing.out(Easing.quad) }), -1, false);
-  }, [t, reduce]);
-  const ring = useAnimatedStyle(() => ({ opacity: 1 - t.value, transform: [{ scale: 0.6 + t.value * 0.8 }] }));
-  return (
-    <View style={styles.waitWrap}>
-      <Animated.View style={[styles.waitRing, ring]} />
-      <View style={styles.waitDot} />
-    </View>
-  );
-}
-
 export default function ChallengeScreen() {
-  const { toId, name } = useLocalSearchParams<{ toId?: string; name?: string }>();
+  const { toId, name, game: initialGame } = useLocalSearchParams<{ toId?: string; name?: string; game?: string }>();
+  const game = initialGame === 'sos' ? 'sos' : 'fade';
   const tc = useSettings((s) => s.timeControl);
   const rated = useSettings((s) => s.rated);
   const username = useSettings((s) => s.username);
@@ -43,14 +28,14 @@ export default function ChallengeScreen() {
     ensureSignedIn()
       .then(async () => {
         if (!useSettings.getState().profileSynced) await saveProfile();
-        return callFade<{ code: string }>('create-challenge', { timeControl: tc, toId: toId ?? null, rated });
+        return callFade<{ code: string }>('create-challenge', { timeControl: tc, toId: toId ?? null, rated, game });
       })
       .then((r) => {
         setCode(r.code);
         haptic.success();
       })
       .catch((e: Error) => setError(e.message));
-  }, [tc, toId, rated]);
+  }, [tc, toId, rated, game]);
 
   // Wait for the friend: realtime on our challenge row, plus a poll as a fallback.
   useEffect(() => {
@@ -84,7 +69,7 @@ export default function ChallengeScreen() {
     router.back();
   };
 
-  const message = code ? challengeMessage(code, username, tc) : '';
+  const message = code ? challengeMessage(code, username, tc, game) : '';
   const mm = Math.floor(left / 60);
   const ss = String(left % 60).padStart(2, '0');
 
@@ -93,15 +78,17 @@ export default function ChallengeScreen() {
       <Pressable onPress={cancel} hitSlop={10} accessibilityRole="button" accessibilityLabel="Cancel challenge">
         <Text style={[type.label, styles.back]}>‹ Cancel</Text>
       </Pressable>
-      <Text style={type.title}>{name ? `Challenge ${name}` : 'Challenge a friend'}</Text>
+      <Text style={type.title}>{name ? `Challenge ${name}` : game === 'sos' ? 'SOS Duel Challenge' : 'Challenge a friend'}</Text>
       <Text style={type.bodyDim}>
         {name
           ? `${name} gets a banner in FADE. You can also send them this code.`
           : 'Send this code on WhatsApp. Your friend opens FADE, taps “Enter a code” and types it.'}
       </Text>
 
-      <GlassCard glowColor={colors.x} style={styles.codeCard}>
-        <Text style={type.caption}>{tc === 'blitz' ? 'BLITZ · 3 S A MOVE' : 'RAPID · 8 S A MOVE'}</Text>
+      <GlassCard glowColor={game === 'sos' ? colors.coral : colors.x} style={styles.codeCard}>
+        <Text style={type.caption}>
+          {game === 'sos' ? 'SOS DUEL · 5×5 GRID' : tc === 'blitz' ? 'BLITZ · 3 S A MOVE' : 'RAPID · 8 S A MOVE'}
+        </Text>
         {code ? (
           <Animated.View entering={FadeIn.duration(200)} style={styles.codeRow} accessible accessibilityLabel={`Code ${code.split('').join(' ')}`}>
             {code.split('').map((ch, i) => (
@@ -113,7 +100,7 @@ export default function ChallengeScreen() {
         ) : error ? (
           <Text style={[type.label, { color: colors.coral }]}>{error}</Text>
         ) : (
-          <Text style={type.bodyDim}>Making your code…</Text>
+          <NeonLoader size="md" label="Making your code…" />
         )}
         {code && <Text style={type.caption}>EXPIRES IN {mm}:{ss}</Text>}
       </GlassCard>
@@ -123,8 +110,7 @@ export default function ChallengeScreen() {
 
       {code && (
         <View style={styles.waiting}>
-          <Waiting />
-          <Text style={type.bodyDim}>Waiting for your friend to join…</Text>
+          <NeonLoader size="sm" label="Waiting for your friend to join…" />
         </View>
       )}
       {!code && error && <GlowButton title="Try again" variant="glass" size="md" onPress={() => router.replace('/challenge')} />}

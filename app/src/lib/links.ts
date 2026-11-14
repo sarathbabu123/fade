@@ -5,11 +5,15 @@ const supabaseUrl = (process.env.EXPO_PUBLIC_SUPABASE_URL ?? '').replace(/\/+$/,
 /** Permanent direct download link for the latest APK (public GitHub Release CDN). */
 export const APK_URL = 'https://github.com/sarathbabu123/fade/releases/latest/download/fade.apk';
 
-export function challengeMessage(code: string, from: string | null, timeControl: 'rapid' | 'blitz'): string {
+export function challengeMessage(code: string, from: string | null, timeControl: 'rapid' | 'blitz', game: 'fade' | 'sos' = 'fade'): string {
   const clock = timeControl === 'blitz' ? 'Blitz, 3 s a move' : 'Rapid, 8 s a move';
+  const title = game === 'sos' ? 'SOS DUEL' : 'FADE';
+  const subtitle = game === 'sos'
+    ? `Tactical grid battle. Form S-O-S in any line to score and take extra turns. ${clock}.`
+    : `Tic-tac-toe where your oldest mark fades. ${clock}.`;
   return [
-    `⚡ ${from ?? 'A friend'} challenged you to FADE!`,
-    `Tic-tac-toe where your oldest mark fades. ${clock}.`,
+    `⚡ ${from ?? 'A friend'} challenged you to ${title}!`,
+    subtitle,
     ``,
     `Your code: *${code}*`,
     ``,

@@ -10,6 +10,7 @@ import { GlassCard } from '@/components/GlassCard';
 import { GearIcon } from '@/components/Icons';
 import { RatingChip } from '@/components/RatingChip';
 import { Screen } from '@/components/Screen';
+import { NeonSkeleton } from '@/components/NeonSkeleton';
 import { useSettings } from '@/lib/settings';
 import { supabase } from '@/lib/supabase';
 import { colors, radii, spacing, type, withAlpha } from '@/theme';
@@ -190,12 +191,21 @@ export default function ProfileScreen() {
       </GlassCard>
 
       <View style={styles.stats}>
-        {stats.map((s) => (
-          <GlassCard key={s.label} style={styles.stat}>
-            <AnimatedNumber value={s.value} style={{ ...type.number, color: s.color }} />
-            <Text style={type.caption}>{s.label}</Text>
-          </GlassCard>
-        ))}
+        {ratingsQuery.isLoading && !ratingsQuery.data ? (
+          [1, 2, 3, 4].map((i) => (
+            <GlassCard key={i} style={styles.stat}>
+              <NeonSkeleton width={60} height={28} />
+              <NeonSkeleton width={50} height={12} />
+            </GlassCard>
+          ))
+        ) : (
+          stats.map((s) => (
+            <GlassCard key={s.label} style={styles.stat}>
+              <AnimatedNumber value={s.value} style={{ ...type.number, color: s.color }} />
+              <Text style={type.caption}>{s.label}</Text>
+            </GlassCard>
+          ))
+        )}
       </View>
     </Screen>
   );

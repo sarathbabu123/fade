@@ -14,6 +14,7 @@ import { RatingChip } from '@/components/RatingChip';
 import { TAB_BAR_SPACE } from '@/components/TabBar';
 import { useSettings } from '@/lib/settings';
 import { supabase } from '@/lib/supabase';
+import { FriendSkeletonRow } from '@/components/NeonSkeleton';
 import { colors, radii, spacing, type, withAlpha } from '@/theme';
 import type { AvatarColor } from '@/theme';
 
@@ -114,7 +115,13 @@ export default function FriendsScreen() {
       {tab === 'friends' ? (
         <>
           <Text style={type.caption}>YOUR FRIENDS</Text>
-          {friendOnly.length ? (
+          {friends.isLoading ? (
+            <>
+              <FriendSkeletonRow />
+              <FriendSkeletonRow />
+              <FriendSkeletonRow />
+            </>
+          ) : friendOnly.length ? (
             friendOnly.map((f) => {
               const seen = lastSeen(f.last_seen_at);
               return (
@@ -145,7 +152,7 @@ export default function FriendsScreen() {
                 <Avatar avatar={{ glyph: 'comet', color: 'cyan' }} size={52} dimmed />
                 <Avatar avatar={{ glyph: 'flame', color: 'coral' }} size={44} dimmed />
               </View>
-              <Text style={[type.body, styles.center]}>{friends.isLoading ? 'Loading…' : 'No friends yet'}</Text>
+              <Text style={[type.body, styles.center]}>No friends yet</Text>
               <Text style={[type.bodyDim, styles.center]}>Joining a match by code adds you as friends.</Text>
             </GlassCard>
           )}

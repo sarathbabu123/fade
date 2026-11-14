@@ -160,6 +160,46 @@ async function main() {
   const res = await call(a, { action: 'resign', matchId: r2.rematchId });
   check(res.ok && (res.match as any).status === 'aborted', 'leaving during the start race aborts the rematch');
 
+  console.log('SOS Duel online challenge & mechanics');
+  const sosCh = await call(a, { action: 'create-challenge', timeControl: 'rapid', game: 'sos' });
+  check(sosCh.ok && typeof sosCh.code === 'string' && (sosCh.code as string).startsWith('S'), `SOS code starts with S (${sosCh.code})`);
+  const sosJoin = await call(b, { action: 'accept-challenge', code: sosCh.code });
+  check(sosJoin.ok && typeof sosJoin.matchId === 'string', 'opponent joined SOS duel');
+  const sosMatchId = sosJoin.matchId as string;
+
+  // Wait for GO time before race taps
+  let sosM = (await call(a, { action: 'tick', matchId: sosMatchId })).match as Record<string, any>;
+  const sosGoAt = Date.parse(sosM.race.goAt);
+  await sleep(Math.max(0, sosGoAt - serverNow(a)) + 50);
+
+  // Race taps
+  await call(a, { action: 'race-tap', matchId: sosMatchId, tap: { kind: 'tap', reactionMs: 180 } });
+  const raceRes = await call(b, { action: 'race-tap', matchId: sosMatchId, tap: { kind: 'tap', reactionMs: 250 } });
+  const sosActive = raceRes.match as any;
+  check(sosActive?.status === 'active' && sosActive?.race?.game === 'sos', 'SOS match active with game=sos');
+  check(sosActive?.state?.board?.length === 25, '5x5 SOS board initialized with 25 cells');
+
+  // Wait for START_PAUSE_MS before making the first move
+  await sleep(1600);
+
+  // Player X moves 'S' at cell 0
+  const m1 = await call(a, { action: 'move', matchId: sosMatchId, cell: 0, letter: 'S', ply: 0 });
+  check(m1.ok && (m1.match as any)?.state?.toMove === 'O', 'move 1 applied; turn passed to O');
+
+  // Player O moves 'O' at cell 1
+  const m2 = await call(b, { action: 'move', matchId: sosMatchId, cell: 1, letter: 'O', ply: 1 });
+  check(m2.ok && (m2.match as any)?.state?.toMove === 'X', 'move 2 applied; turn passed to X');
+
+  // Player X completes S-O-S at cell 2
+  const m3 = await call(a, { action: 'move', matchId: sosMatchId, cell: 2, letter: 'S', ply: 2 });
+  const s3 = (m3.match as any)?.state;
+  check(m3.ok && s3?.scores?.X === 1, 'Player X formed S-O-S and scored 1 point');
+  check(s3?.toMove === 'X', 'Player X retained turn after scoring (Extra Turn combo)');
+
+  // Cleanly resign SOS match
+  const sosResign = await call(b, { action: 'resign', matchId: sosMatchId });
+  check(sosResign.ok && (sosResign.match as any)?.status === 'finished', 'SOS match finished on resign');
+
   await sleep(500);
   check(realtimeEvents > 5, `realtime delivered ${realtimeEvents} match updates to the opponent`);
   await b.sb.removeChannel(channel);

@@ -11,6 +11,7 @@ import { GlowButton } from '@/components/GlowButton';
 import { BotIcon, KeyIcon, PassIcon, SwordsIcon } from '@/components/Icons';
 import { MiniBoard } from '@/components/MiniBoard';
 import type { Cell } from '@/components/MiniBoard';
+import { MiniSosBoard } from '@/components/MiniSosBoard';
 import { Segmented } from '@/components/NeonSwitch';
 import { RatingChip } from '@/components/RatingChip';
 import { Screen } from '@/components/Screen';
@@ -130,8 +131,23 @@ export default function PlayScreen() {
               <Text style={type.caption}>SOS GRID DUEL</Text>
               <Text style={[type.heading, styles.tagline]}>Complete S-O-S in any line.{'\n'}Score and earn extra turns.</Text>
             </View>
+            <MiniSosBoard size={112} />
           </GlassCard>
 
+          <GlowButton
+            title="Challenge a friend"
+            subtitle="Send an SOS Duel code on WhatsApp"
+            icon={<SwordsIcon color={colors.onAccent} />}
+            variant="coral"
+            onPress={() => router.push({ pathname: '/challenge', params: { game: 'sos' } })}
+          />
+          <GlowButton
+            title="Enter a code"
+            icon={<KeyIcon />}
+            variant="glass"
+            size="md"
+            onPress={() => router.push('/join')}
+          />
           <GlowButton
             title="Play SOS Bot"
             subtitle="Test tactics against the AI"
