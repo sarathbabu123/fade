@@ -123,7 +123,7 @@ async function main() {
     if (!didTimeout && s.roundNo === 1 && s.round.ply === 2) {
       // Let this turn's clock run out, then have the opponent claim it.
       didTimeout = true;
-      await sleep(start + m.turn_ms + 400 - serverNow(a));
+      await sleep(start + m.turn_ms + 1000 - serverNow(a));
       const t = (await call(seat[s.round.toMove === 'X' ? 'O' : 'X'], { action: 'tick', matchId })).match as Record<string, any>;
       const last = (t.state as MatchState).round.last;
       check(last?.kind === 'timeout' || (t.state as MatchState).round.ply > s.round.ply, 'missed turn is applied as a timeout by tick');
@@ -141,6 +141,14 @@ async function main() {
   check(!wrongTurn.ok, `moves after the end are rejected (${wrongTurn.error})`);
   const { count } = await a.sb.from('moves').select('*', { count: 'exact', head: true }).eq('match_id', matchId);
   check((count ?? 0) > 0, `move log written (${count} plies)`);
+
+  console.log('Ratings updated after match');
+  const { data: ratA } = await a.sb.from('ratings').select('*').eq('user_id', a.uid).eq('time_control', 'blitz').single();
+  const { data: ratB } = await b.sb.from('ratings').select('*').eq('user_id', b.uid).eq('time_control', 'blitz').single();
+  check(!!ratA && ratA.games === 1, `Alice rated: ${ratA?.rating} (rd ${ratA?.rd})`);
+  check(!!ratB && ratB.games === 1, `Bob rated: ${ratB?.rating} (rd ${ratB?.rd})`);
+  const { data: histA } = await a.sb.from('rating_history').select('*').eq('user_id', a.uid);
+  check((histA?.length ?? 0) === 1, 'rating history recorded for Alice');
 
   console.log('Rematch');
   const r1 = await call(a, { action: 'rematch', matchId });

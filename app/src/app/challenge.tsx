@@ -32,6 +32,7 @@ function Waiting() {
 export default function ChallengeScreen() {
   const { toId, name } = useLocalSearchParams<{ toId?: string; name?: string }>();
   const tc = useSettings((s) => s.timeControl);
+  const rated = useSettings((s) => s.rated);
   const username = useSettings((s) => s.username);
   const [code, setCode] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -42,14 +43,14 @@ export default function ChallengeScreen() {
     ensureSignedIn()
       .then(async () => {
         if (!useSettings.getState().profileSynced) await saveProfile();
-        return callFade<{ code: string }>('create-challenge', { timeControl: tc, toId: toId ?? null });
+        return callFade<{ code: string }>('create-challenge', { timeControl: tc, toId: toId ?? null, rated });
       })
       .then((r) => {
         setCode(r.code);
         haptic.success();
       })
       .catch((e: Error) => setError(e.message));
-  }, [tc, toId]);
+  }, [tc, toId, rated]);
 
   // Wait for the friend: realtime on our challenge row, plus a poll as a fallback.
   useEffect(() => {

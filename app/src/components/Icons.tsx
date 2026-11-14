@@ -90,3 +90,11 @@ export function KeyIcon({ color = colors.text, size = 24 }: IconProps) {
     </Svg>
   );
 }
+
+export function CrownIcon({ color = colors.gold, size = 24 }: IconProps) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24">
+      <Path d="M4 18 L3 8 L8 12 L12 5 L16 12 L21 8 L20 18 Z" {...stroke(color)} />
+    </Svg>
+  );
+}

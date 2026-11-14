@@ -6,7 +6,7 @@
  * The upload key is fetched from the Management API at run time and kept in memory only.
  */
 import { execSync } from 'node:child_process';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -15,15 +15,21 @@ if (!id) throw new Error('usage: release-apk.mjs <easBuildId>');
 const root = join(dirname(fileURLToPath(import.meta.url)), '../..');
 const url = process.env.SUPABASE_PROJECT_URL.replace(/[\\/]+$/, '');
 const ref = process.env.SUPABASE_PROJECT_REF;
-
-const build = JSON.parse(
-  execSync(`npx -y eas-cli@latest build:view ${id} --json`, { cwd: join(root, 'app'), stdio: ['ignore', 'pipe', 'ignore'] }).toString(),
-);
-if (build.status !== 'FINISHED') throw new Error(`build ${id} is ${build.status}`);
-const apkUrl = build.artifacts?.buildUrl ?? build.artifacts?.applicationArchiveUrl;
 const version = JSON.parse(readFileSync(join(root, 'app/app.json'), 'utf8')).expo.version;
-console.log(`build ${id} finished (v${version}), downloading…`);
-const apk = new Uint8Array(await (await fetch(apkUrl)).arrayBuffer());
+
+let apk;
+if (existsSync(join(root, 'fade-preview.apk'))) {
+  console.log('Using local fade-preview.apk…');
+  apk = new Uint8Array(readFileSync(join(root, 'fade-preview.apk')));
+} else {
+  const build = JSON.parse(
+    execSync(`npx -y eas-cli@latest build:view ${id} --json --non-interactive`, { cwd: join(root, 'app'), stdio: ['ignore', 'pipe', 'ignore'] }).toString(),
+  );
+  if (build.status !== 'FINISHED') throw new Error(`build ${id} is ${build.status}`);
+  const apkUrl = build.artifacts?.buildUrl ?? build.artifacts?.applicationArchiveUrl;
+  console.log(`build ${id} finished (v${version}), downloading…`);
+  apk = new Uint8Array(await (await fetch(apkUrl)).arrayBuffer());
+}
 console.log(`APK ${(apk.length / 1024 / 1024).toFixed(1)} MB`);
 
 const keysRes = await fetch(`https://api.supabase.com/v1/projects/${ref}/api-keys?reveal=true`, {

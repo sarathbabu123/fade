@@ -1,6 +1,6 @@
 import { StyleSheet, Text, View } from 'react-native';
 
-import { colors, radii, spacing, type } from '@/theme';
+import { colors, radii, spacing, type, withAlpha } from '@/theme';
 
 import { AnimatedNumber } from './AnimatedNumber';
 
@@ -11,12 +11,13 @@ interface Props {
   provisional?: boolean;
   /** Last change, e.g. +14 or -9. */
   delta?: number;
+  active?: boolean;
 }
 
-export function RatingChip({ label, rating, provisional, delta }: Props) {
+export function RatingChip({ label, rating, provisional, delta, active }: Props) {
   const up = delta !== undefined && delta > 0;
   return (
-    <View style={styles.chip}>
+    <View style={[styles.chip, active && styles.active]}>
       <Text style={type.caption}>{label.toUpperCase()}</Text>
       <View style={styles.row}>
         <AnimatedNumber value={Math.round(rating)} style={styles.rating} />
@@ -40,6 +41,10 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.sm,
     paddingHorizontal: spacing.md,
     gap: 2,
+  },
+  active: {
+    borderColor: colors.gold,
+    backgroundColor: withAlpha(colors.gold, 0.08),
   },
   row: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs },
   rating: { ...type.numberSmall, fontSize: 17 },

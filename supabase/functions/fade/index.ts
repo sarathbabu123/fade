@@ -16,6 +16,7 @@ import {
   turnClockMs,
 } from '../_shared/engine/index.ts';
 import type { MatchState, Player, RaceTap, TimeControl } from '../_shared/engine/index.ts';
+import { defaultRating, rateMatch } from '../_shared/rating/index.ts';
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 // Verify user JWTs locally against the project's public keys (no auth-server hop per call).
@@ -129,6 +130,105 @@ async function logPly(matchId: string, before: MatchState, after: MatchState) {
   });
 }
 
+async function finalizeRatings(m: MatchRow) {
+  if (!m.rated || m.status !== 'finished') return;
+  const tc = m.time_control;
+  const { data: rows } = await admin
+    .from('ratings')
+    .select('*')
+    .in('user_id', [m.player_x, m.player_o])
+    .eq('time_control', tc);
+
+  const getOrInit = (uid: string) => {
+    const existing = rows?.find((r: Record<string, unknown>) => r.user_id === uid);
+    if (existing) {
+      return {
+        rating: Number(existing.rating),
+        rd: Number(existing.rd),
+        volatility: Number(existing.volatility),
+        games: Number(existing.games ?? 0),
+        wins: Number(existing.wins ?? 0),
+        draws: Number(existing.draws ?? 0),
+        losses: Number(existing.losses ?? 0),
+        streak: Number(existing.streak ?? 0),
+        best_streak: Number(existing.best_streak ?? 0),
+      };
+    }
+    const def = defaultRating();
+    return {
+      rating: def.rating,
+      rd: def.rd,
+      volatility: def.volatility,
+      games: 0,
+      wins: 0,
+      draws: 0,
+      losses: 0,
+      streak: 0,
+      best_streak: 0,
+    };
+  };
+
+  const pX = getOrInit(m.player_x);
+  const pO = getOrInit(m.player_o);
+
+  const scoreX = m.winner === 'X' ? 1 : m.winner === 'O' ? 0 : 0.5;
+  const [newX, newO] = rateMatch(pX, pO, scoreX);
+
+  const updateStats = (old: ReturnType<typeof getOrInit>, won: boolean, draw: boolean) => {
+    const wins = old.wins + (won ? 1 : 0);
+    const draws = old.draws + (draw ? 1 : 0);
+    const losses = old.losses + (!won && !draw ? 1 : 0);
+    const streak = won ? old.streak + 1 : 0;
+    const best_streak = Math.max(old.best_streak, streak);
+    return { games: old.games + 1, wins, draws, losses, streak, best_streak };
+  };
+
+  const statsX = updateStats(pX, m.winner === 'X', m.winner === null);
+  const statsO = updateStats(pO, m.winner === 'O', m.winner === null);
+
+  await admin.from('ratings').upsert([
+    {
+      user_id: m.player_x,
+      time_control: tc,
+      rating: newX.rating,
+      rd: newX.rd,
+      volatility: newX.volatility,
+      ...statsX,
+      updated_at: new Date().toISOString(),
+    },
+    {
+      user_id: m.player_o,
+      time_control: tc,
+      rating: newO.rating,
+      rd: newO.rd,
+      volatility: newO.volatility,
+      ...statsO,
+      updated_at: new Date().toISOString(),
+    },
+  ]);
+
+  await admin.from('rating_history').insert([
+    {
+      user_id: m.player_x,
+      time_control: tc,
+      match_id: m.id,
+      rating_before: pX.rating,
+      rating_after: newX.rating,
+      rd_before: pX.rd,
+      rd_after: newX.rd,
+    },
+    {
+      user_id: m.player_o,
+      time_control: tc,
+      match_id: m.id,
+      rating_before: pO.rating,
+      rating_after: newO.rating,
+      rd_before: pO.rd,
+      rd_after: newO.rd,
+    },
+  ]);
+}
+
 /**
  * Advance everything that is due by `now`: resolve the start race, apply missed
  * timeouts (each turn starts when the previous one ended), start the next round.
@@ -195,12 +295,20 @@ async function mutate(id: string, fn: (m: MatchRow, now: number) => Promise<Part
       const saved = await save(m, due.patch);
       if (!saved) continue;
       for (const [a, b] of due.plies) await logPly(m.id, a, b);
+      if (m.status !== 'finished' && saved.status === 'finished') {
+        await finalizeRatings(saved);
+      }
       m = saved;
     }
     const patch = await fn(m, now);
     if (!patch) return m;
     const saved = await save(m, patch);
-    if (saved) return saved;
+    if (saved) {
+      if (m.status !== 'finished' && saved.status === 'finished') {
+        await finalizeRatings(saved);
+      }
+      return saved;
+    }
   }
   throw new HttpError(409, 'busy, try again');
 }
@@ -210,10 +318,10 @@ function randomCode(): string {
   return [...bytes].map((b) => CODE_LETTERS[b % CODE_LETTERS.length]).join('');
 }
 
-async function newMatch(x: string, o: string, tc: TimeControl): Promise<MatchRow> {
+async function newMatch(x: string, o: string, tc: TimeControl, rated = true): Promise<MatchRow> {
   const { data, error } = await admin
     .from('matches')
-    .insert({ player_x: x, player_o: o, time_control: tc, race: { goAt: iso(Date.now() + RACE_LEAD_MS), taps: {} } })
+    .insert({ player_x: x, player_o: o, time_control: tc, rated, race: { goAt: iso(Date.now() + RACE_LEAD_MS), taps: {} } })
     .select('*')
     .single();
   if (error) throw new HttpError(500, error.message);
@@ -229,12 +337,13 @@ async function handle(uid: string, body: Body) {
 
     case 'create-challenge': {
       const tc: TimeControl = body.timeControl === 'blitz' ? 'blitz' : 'rapid';
+      const rated = body.rated !== false;
       const toId = typeof body.toId === 'string' ? body.toId : null;
       // Cancel this user's older open challenges so only one code is live.
       await admin.from('challenges').update({ status: 'cancelled' }).eq('from_id', uid).eq('status', 'open');
       for (let i = 0; i < 5; i++) {
         const code = randomCode();
-        const { error } = await admin.from('challenges').insert({ code, from_id: uid, to_id: toId, time_control: tc });
+        const { error } = await admin.from('challenges').insert({ code, from_id: uid, to_id: toId, time_control: tc, rated });
         if (!error) return { code, expiresInMs: 10 * 60 * 1000 };
       }
       throw new HttpError(500, 'could not create a code');
@@ -253,7 +362,7 @@ async function handle(uid: string, body: Body) {
       if (ch.status !== 'open') throw new HttpError(410, 'That code has already been used');
       if (Date.parse(ch.expires_at) < Date.now()) throw new HttpError(410, 'That code has expired');
       if (ch.to_id && ch.to_id !== uid) throw new HttpError(403, 'That challenge is for someone else');
-      const match = await newMatch(ch.from_id, uid, ch.time_control);
+      const match = await newMatch(ch.from_id, uid, ch.time_control, ch.rated);
       const { data: claimed } = await admin
         .from('challenges')
         .update({ status: 'accepted', match_id: match.id })
@@ -351,7 +460,7 @@ async function handle(uid: string, body: Body) {
         const rematch = { ...m.rematch, [me]: true };
         if (rematch.X && rematch.O) {
           // Swap colours for the rematch.
-          made.row = await newMatch(m.player_o, m.player_x, m.time_control);
+          made.row = await newMatch(m.player_o, m.player_x, m.time_control, m.rated);
           return { rematch, rematch_id: made.row.id };
         }
         return { rematch };

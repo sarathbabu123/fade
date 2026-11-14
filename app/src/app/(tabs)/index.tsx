@@ -1,4 +1,5 @@
 import { applyMove, board, createRound, DEFAULT_ROUND_CONFIG, nextToFade } from '@fade/engine';
+import { useQuery } from '@tanstack/react-query';
 import { router } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
@@ -15,6 +16,7 @@ import { RatingChip } from '@/components/RatingChip';
 import { Screen } from '@/components/Screen';
 import { Wordmark } from '@/components/Wordmark';
 import { useSettings } from '@/lib/settings';
+import { supabase } from '@/lib/supabase';
 import { colors, radii, spacing, type } from '@/theme';
 
 // Built with the real engine: X holds 0, 4, 5 with 0 next to fade; O holds 2, 6.
@@ -27,6 +29,7 @@ const HERO_FADING = [nextToFade(heroRound, 'X')].filter((c): c is number => c !=
 export default function PlayScreen() {
   const avatar = useSettings((s) => s.avatar);
   const username = useSettings((s) => s.username);
+  const me = useSettings((s) => s.userId);
   const [sheet, setSheet] = useState<'tc' | 'bot' | null>(null);
   const tc = useSettings((s) => s.timeControl);
   const rated = useSettings((s) => (s.rated ? 'rated' : 'casual'));
@@ -34,6 +37,17 @@ export default function PlayScreen() {
   const set = useSettings((s) => s.set);
   const setTc = (v: 'rapid' | 'blitz') => set({ timeControl: v });
   const setRated = (v: 'rated' | 'casual') => set({ rated: v === 'rated' });
+
+  const ratingQuery = useQuery({
+    queryKey: ['my-rating', me, tc],
+    queryFn: async () => {
+      if (!me) return null;
+      const { data } = await supabase.from('ratings').select('*').eq('user_id', me).eq('time_control', tc).maybeSingle();
+      return data;
+    },
+    enabled: !!me,
+    refetchInterval: 15_000,
+  });
 
   return (
     <Screen tabs>
@@ -49,7 +63,11 @@ export default function PlayScreen() {
           <Text style={type.caption}>HEY {username?.toUpperCase() ?? 'PLAYER'}</Text>
           <Text style={[type.heading, styles.tagline]}>Your oldest mark fades.{'\n'}Three in a row wins.</Text>
           <View style={styles.chips}>
-            <RatingChip label="Rapid" rating={1200} provisional />
+            <RatingChip
+              label={tc === 'rapid' ? 'Rapid' : 'Blitz'}
+              rating={ratingQuery.data?.rating ?? 1200}
+              provisional={(ratingQuery.data?.games ?? 0) < 10}
+            />
           </View>
         </View>
         <MiniBoard cells={HERO} fading={HERO_FADING} size={112} />

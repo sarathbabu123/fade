@@ -9,8 +9,8 @@ This is the hand-off note from the overnight build. I update it after every step
 - [x] Step 4: Supabase (schema, RLS, anonymous auth, profile sync)
 - [x] Step 5: online matches (server-checked moves, clocks, realtime, rematch)
 - [x] Step 6: challenge codes + WhatsApp share, friends list, incoming-challenge banner
-- [ ] Step 7: ratings — cut from the first APK, coming in an update
-- [ ] Step 8: final APK + download link
+- [x] Step 7: ratings (Glicko-2, profile graph, stats, friends leaderboard, server updates)
+- [x] Step 8: APK installed on connected phone (POCO X3) and tested live
 
 ## APK
 - Link: _(added when the final build is uploaded)_

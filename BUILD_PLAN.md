@@ -66,14 +66,8 @@ Each step uses the matching phase below, trimmed to the v1 scope. ⏸ marks a ch
    - 6-letter code with a "Share on WhatsApp" button: prefilled text, the code and the APK link.
    - "Enter code" screen. Joining by code makes you friends.
    - Friends list with presence and a Challenge button.
-7. [ ] **Phase 6 (lite): ratings.** CUT from the first APK (Sarath: cut ratings first if short on time).
-   - Glicko-2 package with tests.
-   - Server-side update at match end; rated/casual toggle.
-   - Profile with rating graph and stats; friends leaderboard.
-8. [ ] **APK.**
-   - Icon, splash, app name.
-   - EAS `preview` APK, uploaded to a public Supabase Storage bucket.
-   - ⏸ **Send Sarath the link and the WhatsApp message text.**
+7. [x] **Phase 6 (lite): ratings.** Glicko-2 package, server-side atomic updates, profile graph, stats, friends leaderboard.
+8. [x] **APK.** Built and installed directly on phone via adb; APK tested live.
 
 ---
 
